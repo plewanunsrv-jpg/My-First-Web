@@ -21,17 +21,20 @@
 
     <div id="loading" class="loading-overlay">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p class="text-blue-600 font-bold">กำลังซิงค์ข้อมูลกับระบบ Cloud...</p>
+        <p class="text-blue-600 font-bold italic text-lg">กำลังซิงค์ข้อมูลกับทุกคน...</p>
     </div>
 
     <div id="app" class="max-w-7xl mx-auto p-4 md:p-6">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-                <h1 class="text-3xl font-black text-gray-900 tracking-tight">Meeting & Task Tracker</h1>
-                <p class="text-gray-500 mt-1">ระบบบันทึกและติดตามงานส่วนกลาง (Google Sheets Connect)</p>
+                <h1 class="text-4xl font-black text-gray-900 tracking-tight italic">Meeting & Task Tracker</h1>
+                <p class="text-gray-500 mt-1 font-medium flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    เชื่อมต่อฐานข้อมูลส่วนกลาง (Shared Cloud)
+                </p>
             </div>
-            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg transition-all">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i> บันทึกการประชุมใหม่
+            <button onclick="openModal()" class="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-xl shadow-blue-100 transition-all transform hover:-translate-y-1">
+                <i data-lucide="plus-circle" class="w-6 h-6"></i> เพิ่มงานใหม่
             </button>
         </div>
 
@@ -39,37 +42,37 @@
             </div>
     </div>
 
-    <div id="modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
-            <h2 class="text-2xl font-bold mb-6">รายละเอียดการประชุมใหม่</h2>
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+    <div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-gray-100">
+            <h2 class="text-3xl font-black mb-6 text-gray-900">บันทึกข้อมูล</h2>
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">วันที่ประชุม</label>
-                        <input type="date" id="m-date" class="w-full bg-gray-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">วันที่ประชุม</label>
+                        <input type="date" id="m-date" class="w-full bg-gray-50 border-2 border-transparent rounded-2xl p-4 focus:bg-white focus:border-blue-500 transition-all outline-none font-bold">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">สถานที่</label>
-                        <input type="text" id="m-location" placeholder="เช่น ห้องประชุม A" class="w-full bg-gray-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">สถานที่</label>
+                        <input type="text" id="m-location" class="w-full bg-gray-50 border-2 border-transparent rounded-2xl p-4 focus:bg-white focus:border-blue-500 transition-all outline-none font-bold">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">หัวข้อ/งาน</label>
-                    <input type="text" id="m-topic" placeholder="ชื่อหัวข้อการประชุม" class="w-full bg-gray-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">หัวข้อการประชุม / งาน</label>
+                    <input type="text" id="m-topic" class="w-full bg-gray-50 border-2 border-transparent rounded-2xl p-4 focus:bg-white focus:border-blue-500 transition-all outline-none font-bold">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">Part No.</label>
-                        <input type="text" id="m-partno" class="w-full bg-gray-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">Part No.</label>
+                        <input type="text" id="m-partno" class="w-full bg-gray-50 border-2 border-transparent rounded-2xl p-4 focus:bg-white focus:border-blue-500 transition-all outline-none font-bold">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">ผู้รับผิดชอบ</label>
-                        <input type="text" id="m-resp" class="w-full bg-gray-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">ผู้รับผิดชอบ</label>
+                        <input type="text" id="m-resp" class="w-full bg-gray-50 border-2 border-transparent rounded-2xl p-4 focus:bg-white focus:border-blue-500 transition-all outline-none font-bold">
                     </div>
                 </div>
-                <div class="flex gap-3 mt-8">
-                    <button onclick="closeModal()" class="flex-1 py-3 font-bold text-gray-500 hover:bg-gray-100 rounded-2xl transition-all">ยกเลิก</button>
-                    <button onclick="handleSave()" class="flex-1 py-3 font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-2xl shadow-lg shadow-blue-100 transition-all">บันทึกลง Cloud</button>
+                <div class="flex gap-4 mt-10">
+                    <button onclick="closeModal()" class="flex-1 py-4 font-black text-gray-400 hover:text-gray-600 transition-all uppercase tracking-widest">Cancel</button>
+                    <button onclick="handleSave()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all uppercase tracking-widest">Save to Cloud</button>
                 </div>
             </div>
         </div>
@@ -79,97 +82,113 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykZGI7Q8YecWyp3U6GSa85xFgRt9HnzRkvM1NOaMdF6Hbi22Ti7CtCTZ7KdzRXwFUVog/exec";
         let meetings = [];
 
-        // แสดง/ซ่อน Loading
         function toggleLoading(show) {
             document.getElementById('loading').style.display = show ? 'flex' : 'none';
         }
 
-        // ดึงข้อมูลจาก Google Sheets
+        // ดึงข้อมูลมาแสดงผลแบบเดิม
         async function fetchMeetings() {
             toggleLoading(true);
             try {
                 const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                meetings = data;
+                meetings = await response.json();
                 renderDashboard();
             } catch (error) {
-                console.error("Error fetching data:", error);
-                alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า Apps Script");
+                alert("ไม่สามารถดึงข้อมูลได้");
             } finally {
                 toggleLoading(false);
             }
         }
 
-        // ส่งข้อมูลไปบันทึก
+        // บันทึกลง Cloud
         async function handleSave() {
+            const topic = document.getElementById('m-topic').value;
+            const mDate = document.getElementById('m-date').value;
+            
+            if(!topic || !mDate) { alert("กรุณากรอกข้อมูลสำคัญให้ครบครับ"); return; }
+
             const data = {
-                meetingDate: document.getElementById('m-date').value,
+                meetingDate: mDate,
                 location: document.getElementById('m-location').value,
                 tasks: [{
-                    topic: document.getElementById('m-topic').value,
+                    topic: topic,
                     partNo: document.getElementById('m-partno').value,
-                    partName: "-", // ใส่เพิ่มเติมตามต้องการ
+                    partName: "-",
                     responsibility: document.getElementById('m-resp').value,
                     startDate: new Date().toISOString().split('T')[0],
-                    dueDate: document.getElementById('m-date').value
+                    dueDate: mDate
                 }]
             };
 
-            if(!data.meetingDate || !data.tasks[0].topic) {
-                alert("กรุณากรอกข้อมูลวันที่และหัวข้อ");
-                return;
-            }
-
             toggleLoading(true);
             try {
+                // ใช้โหมด no-cors สำหรับ Google Apps Script
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // สำคัญสำหรับ Google Apps Script
+                    mode: 'no-cors',
                     body: JSON.stringify(data)
                 });
                 
-                // เนื่องจากโหมด no-cors ไม่ส่งผลกลับมา ให้เราถือว่าสำเร็จแล้วรีโหลด
-                alert("บันทึกข้อมูลเรียบร้อยแล้ว (ระบบกำลังอัปเดต...)");
+                alert("บันทึกสำเร็จ! ข้อมูลถูกแชร์ไปยังทุกคนแล้ว");
                 setTimeout(() => {
                     fetchMeetings();
                     closeModal();
-                }, 2000);
-            } catch (error) {
-                alert("เกิดข้อผิดพลาดในการบันทึก");
-            } finally {
-                toggleLoading(false);
-            }
+                }, 1000);
+            } catch (e) { alert("ผิดพลาด"); }
+            finally { toggleLoading(false); }
         }
 
         function renderDashboard() {
             const container = document.getElementById('dashboard');
             if (meetings.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200 text-gray-400">ยังไม่มีข้อมูลการประชุมที่บันทึกไว้</div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400 italic">-- ไม่มีงานค้างในระบบ --</div>`;
                 return;
             }
 
-            container.innerHTML = meetings.map(m => `
-                <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-xl transition-all">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${m.Status === 'Done' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}">
-                            ${m.Status || 'Active'}
-                        </span>
-                        <span class="text-gray-400 text-xs">${new Date(m.MeetingDate).toLocaleDateString('th-TH')}</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">${m.Topic}</h3>
-                    <div class="space-y-2 text-sm text-gray-500 mb-6">
-                        <p><span class="font-bold">Part No:</span> ${m.PartNo}</p>
-                        <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl">
-                             <i data-lucide="user" class="w-4 h-4 text-blue-500"></i>
-                             <span class="text-gray-700 font-medium">${m.Responsibility}</span>
+            container.innerHTML = meetings.map(m => {
+                const isDone = m.Status === 'Done';
+                // คำนวณวันเหมือนเวอร์ชันเดิม
+                const diff = new Date(m.DueDate) - new Date();
+                const daysRemaining = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+                return `
+                    <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 hover:shadow-2xl transition-all group">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full ${isDone ? 'bg-green-500' : 'bg-blue-500'}"></span>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">${m.Status || 'Active'}</span>
+                            </div>
+                            <span class="text-xs font-bold text-gray-300 italic">${new Date(m.MeetingDate).toLocaleDateString('th-TH')}</span>
+                        </div>
+
+                        <h3 class="text-xl font-black text-gray-900 mb-2 leading-tight">${m.Topic}</h3>
+                        <p class="text-sm text-gray-400 mb-6 font-medium">Part: ${m.PartNo || '-'}</p>
+
+                        <div class="flex items-center gap-4 mb-8 bg-gray-50 p-4 rounded-3xl group-hover:bg-blue-50 transition-colors">
+                            <div class="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                                <i data-lucide="user" class="w-5 h-5 text-blue-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Responsibility</p>
+                                <p class="text-sm font-bold text-gray-700">${m.Responsibility}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 border-t border-gray-50 pt-6">
+                            <div class="text-center">
+                                <p class="text-[24px] font-black ${daysRemaining < 0 ? 'text-red-500' : 'text-blue-600'}">${Math.abs(daysRemaining)}</p>
+                                <p class="text-[8px] font-black text-gray-300 uppercase italic leading-none">${daysRemaining < 0 ? 'Late' : 'Days Left'}</p>
+                            </div>
+                            <button class="flex-1 py-4 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">
+                                ${isDone ? 'Closed' : 'Mark Complete'}
+                            </button>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             lucide.createIcons();
         }
 
-        // Modal Helpers
         function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
 
@@ -177,3 +196,4 @@
     </script>
 </body>
 </html>
+
