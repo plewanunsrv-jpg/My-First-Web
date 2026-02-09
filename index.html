@@ -3,177 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meeting & Task Tracker (Global Sync)</title>
+    <title>Global Meeting Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Sarabun', sans-serif; }
         .modal-active { overflow: hidden; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
 
     <div id="app" class="max-w-7xl mx-auto p-4 md:p-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div class="flex justify-between items-center mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Meeting & Task Dashboard</h1>
-                <p class="text-gray-500 mt-1">ข้อมูลส่วนกลางซิงค์จาก Google Sheets (เห็นร่วมกันทุกคน)</p>
+                <h1 class="text-3xl font-bold text-gray-900">Meeting Dashboard</h1>
+                <p class="text-gray-500">ข้อมูลซิงค์จาก Google Sheets (เห็นเหมือนกันทุกคน)</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="loadDataFromSheet()" class="p-3 bg-white border rounded-xl hover:bg-gray-50 shadow-sm transition-all">
                     <i data-lucide="refresh-cw" id="refresh-icon"></i>
                 </button>
-                <button onclick="openModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all transform active:scale-95">
-                    <i data-lucide="plus-circle"></i>
-                    บันทึกการประชุมใหม่
+                <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 transition-all">
+                    <i data-lucide="plus-circle"></i> บันทึกงานใหม่
                 </button>
             </div>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-container"></div>
 
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4">
-            <div class="relative flex-1">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-5"></i>
-                <input type="text" id="search-input" oninput="renderDashboard()" placeholder="ค้นหา หัวข้อ, Part No, ผู้รับผิดชอบ..." 
-                    class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <select id="status-filter" onchange="renderDashboard()" class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium">
-                <option value="Active">⚡ งานที่ต้องทำ (Active)</option>
-                <option value="All">📂 ประวัติทั้งหมด (History)</option>
-                <option value="Completed">🟢 เสร็จสิ้น (Completed)</option>
-            </select>
-        </div>
-
         <div id="task-list" class="space-y-4">
-            <div class="text-center py-20 text-gray-400">กำลังเชื่อมต่อระบบส่วนกลาง...</div>
+            <div class="text-center py-20 text-gray-400">กำลังโหลดข้อมูล...</div>
         </div>
     </div>
 
     <div id="modal" class="fixed inset-0 bg-black/60 hidden z-50 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div class="p-6 border-b flex justify-between items-center">
                 <h2 class="text-xl font-bold">บันทึกการประชุมใหม่</h2>
-                <button onclick="closeModal()" class="p-2 text-gray-400"><i data-lucide="x"></i></button>
+                <button onclick="closeModal()" class="text-gray-400"><i data-lucide="x"></i></button>
             </div>
-
-            <div class="p-6 overflow-y-auto custom-scroll flex-1">
-                <div class="bg-blue-50 p-5 rounded-2xl mb-8 grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <input type="date" id="m-date" class="w-full p-2.5 border rounded-xl">
-                    <input type="text" id="m-location" placeholder="สถานที่ / ช่องทาง" class="w-full p-2.5 border rounded-xl">
+            <div class="p-6 overflow-y-auto flex-1">
+                <div class="bg-blue-50 p-5 rounded-2xl mb-6 grid grid-cols-2 gap-4">
+                    <input type="date" id="m-date" class="p-2.5 border rounded-xl">
+                    <input type="text" id="m-location" placeholder="สถานที่ประชุม" class="p-2.5 border rounded-xl">
                 </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div class="lg:col-span-5 space-y-4">
-                        <div class="bg-white border p-5 rounded-2xl shadow-sm space-y-4">
-                            <input type="text" id="t-topic" placeholder="หัวข้อเรื่อง..." class="w-full p-2.5 border rounded-xl">
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="text" id="t-partno" placeholder="Part No." class="p-2.5 border rounded-xl text-sm">
-                                <input type="text" id="t-partname" placeholder="Part Name" class="p-2.5 border rounded-xl text-sm">
-                            </div>
-                            <input type="text" id="t-res" placeholder="ผู้รับผิดชอบ" class="w-full p-2.5 border rounded-xl text-sm">
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="date" id="t-start" class="p-2.5 border rounded-xl text-sm">
-                                <input type="date" id="t-due" class="p-2.5 border rounded-xl text-sm">
-                            </div>
-                            <button onclick="addTempTask()" class="w-full py-3 bg-gray-900 text-white rounded-xl font-bold">+ เพิ่มลงรายการ</button>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4 p-4 border rounded-2xl">
+                        <input type="text" id="t-topic" placeholder="หัวข้อเรื่อง" class="w-full p-2.5 border rounded-xl">
+                        <input type="text" id="t-res" placeholder="ผู้รับผิดชอบ" class="w-full p-2.5 border rounded-xl">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" id="t-start" class="p-2.5 border rounded-xl">
+                            <input type="date" id="t-due" class="p-2.5 border rounded-xl">
                         </div>
+                        <button onclick="addTempTask()" class="w-full py-3 bg-gray-900 text-white rounded-xl font-bold">+ เพิ่มรายการ</button>
                     </div>
-                    <div class="lg:col-span-7 bg-gray-50 rounded-2xl p-4 border border-dashed min-h-[200px]">
-                        <table class="w-full text-sm"><tbody id="temp-list-body"></tbody></table>
+                    <div class="bg-gray-50 rounded-2xl p-4 overflow-y-auto max-h-[300px]">
+                        <table class="w-full text-sm" id="temp-table">
+                            <tbody id="temp-list-body"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-
-            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-6 py-2.5 border rounded-xl">ยกเลิก</button>
-                <button onclick="saveAllToStorage()" id="save-btn" disabled class="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold">บันทึกทั้งหมดลง Cloud</button>
+            <div class="p-6 border-t flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-6 py-2 border rounded-xl">ยกเลิก</button>
+                <button onclick="saveAllToStorage()" id="save-btn" disabled class="px-8 py-2 bg-blue-600 text-white rounded-xl font-bold">บันทึกทั้งหมดลง Sheet</button>
             </div>
         </div>
     </div>
 
     <script>
-        // *** สำคัญ: นำ URL ของคุณมาวางตรงนี้ ***
-        const SCRIPT_URL = 'ใส่_URL_ของคุณที่นี่';
-        
-        let meetings = []; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlV4JlyhiGARQSAaUHzwXxH6F4vGe9288JzSoAus-2Octta8nVW90y_qnoj2nKpk0I/exec';
+        let meetings = [];
         let tempTasks = [];
-
-        function calculateDaysDiff(d2) {
-            const today = new Date(); today.setHours(0,0,0,0);
-            const dueDate = new Date(d2); dueDate.setHours(0,0,0,0);
-            return Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-        }
 
         async function loadDataFromSheet() {
             const container = document.getElementById('task-list');
             const icon = document.getElementById('refresh-icon');
-            if(icon) icon.classList.add('animate-spin');
+            icon.classList.add('animate-spin');
             
             try {
                 const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                meetings = data.filter(item => item.topic); // กรองแถวว่าง
+                meetings = await response.json();
                 renderDashboard();
-            } catch (error) {
-                container.innerHTML = '<div class="text-center py-20 text-red-500 font-bold">ไม่สามารถเชื่อมต่อ Google Sheets ได้ (โปรดเช็ค Deployment URL หรือสิทธิ์การเข้าถึง)</div>';
+            } catch (e) {
+                container.innerHTML = '<div class="text-center py-20 text-red-500">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจสอบการตั้งค่า Deployment</div>';
             } finally {
-                if(icon) icon.classList.remove('animate-spin');
+                icon.classList.remove('animate-spin');
             }
         }
 
         function renderDashboard() {
-            const searchText = document.getElementById('search-input').value.toLowerCase();
-            const filterValue = document.getElementById('status-filter').value;
             const container = document.getElementById('task-list');
+            const statsContainer = document.getElementById('stats-container');
+            
+            if (meetings.length === 0) {
+                container.innerHTML = '<div class="text-center py-20 text-gray-400">ไม่มีข้อมูลใน Google Sheets</div>';
+                return;
+            }
 
-            const filtered = meetings.filter(m => {
-                const isMatch = m.topic.toLowerCase().includes(searchText) || m.responsible.toLowerCase().includes(searchText);
-                if (filterValue === 'Active') return isMatch && m.status !== 'Completed';
-                if (filterValue === 'Completed') return isMatch && m.status === 'Completed';
-                return isMatch;
-            });
-
-            // Update Stats
-            const stats = { Total: meetings.length, Done: meetings.filter(x => x.status === 'Completed').length };
-            document.getElementById('stats-container').innerHTML = `
-                <div class="bg-white p-5 rounded-2xl border">
-                    <p class="text-xs font-bold text-gray-400">งานทั้งหมด</p>
-                    <h3 class="text-3xl font-black">${stats.Total}</h3>
-                </div>
-                <div class="bg-blue-50 p-5 rounded-2xl border text-blue-600">
-                    <p class="text-xs font-bold uppercase">รอดำเนินการ</p>
-                    <h3 class="text-3xl font-black">${stats.Total - stats.Done}</h3>
-                </div>
-            `;
-
-            container.innerHTML = filtered.map(m => {
-                const diff = calculateDaysDiff(m.dueDate);
-                const isDone = m.status === 'Completed';
-                return `
-                    <div class="bg-white rounded-2xl border p-5 flex flex-col md:flex-row gap-6 border-l-8 ${isDone ? 'border-l-green-500' : 'border-l-blue-500'} shadow-sm">
-                        <div class="flex-1">
-                            <p class="text-[10px] text-gray-400 font-bold uppercase">${m.meetingDate} | ${m.location}</p>
-                            <h3 class="text-lg font-bold text-gray-800">${m.topic}</h3>
-                            <p class="text-xs text-gray-500 mt-1">Part: ${m.partNo || '-'} | ${m.partName || '-'}</p>
-                        </div>
-                        <div class="flex-1 md:border-l pl-6">
-                            <p class="text-[10px] text-gray-400 font-bold uppercase">ผู้รับผิดชอบ</p>
-                            <p class="font-bold text-gray-700">${m.responsible}</p>
-                            <p class="text-xs text-gray-400 italic">Due: ${m.dueDate}</p>
-                        </div>
-                        <div class="text-right min-w-[100px]">
-                             <span class="px-3 py-1 rounded-lg text-[10px] font-black border ${isDone ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
-                                ${isDone ? 'COMPLETED' : 'PENDING'}
-                            </span>
-                        </div>
+            container.innerHTML = meetings.map(m => `
+                <div class="bg-white rounded-2xl border p-5 flex flex-col md:flex-row gap-6 border-l-8 ${m.status === 'Completed' ? 'border-l-green-500' : 'border-l-blue-500'}">
+                    <div class="flex-1">
+                        <p class="text-[10px] text-gray-400 font-bold">${m.meetingDate} | ${m.location}</p>
+                        <h3 class="text-lg font-bold">${m.topic}</h3>
+                        <p class="text-xs text-gray-500">Part: ${m.partNo || '-'} | ${m.partName || '-'}</p>
                     </div>
-                `;
-            }).join('');
+                    <div class="flex-1 md:border-l md:pl-6">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">ผู้รับผิดชอบ</p>
+                        <p class="font-bold text-gray-700">${m.responsible}</p>
+                        <p class="text-xs text-gray-500 italic">กำหนดส่ง: ${m.dueDate}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 rounded-lg text-[10px] font-bold border ${m.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                            ${m.status === 'Completed' ? 'เสร็จสิ้น' : 'รอดำเนินการ'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            
             lucide.createIcons();
         }
 
@@ -182,32 +130,41 @@
             const payload = tempTasks.map(t => ({
                 meetingDate: document.getElementById('m-date').value,
                 location: document.getElementById('m-location').value,
-                topic: t.topic, partNo: t.partNo, partName: t.partName,
-                responsible: t.responsible, startDate: t.startDate, dueDate: t.dueDate,
-                status: 'Pending', completionDate: ''
+                topic: t.topic,
+                partNo: '', partName: '',
+                responsible: t.responsible,
+                startDate: t.startDate,
+                dueDate: t.dueDate,
+                status: 'Pending',
+                completionDate: ''
             }));
 
-            btn.disabled = true; btn.innerText = "กำลังส่งข้อมูล...";
+            btn.disabled = true;
+            btn.innerText = "กำลังบันทึก...";
+
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("บันทึกสำเร็จ! ข้อมูลจะปรากฏให้ทุกคนเห็นทันที");
+                alert("บันทึกสำเร็จ!");
                 closeModal();
                 loadDataFromSheet();
-            } catch (e) { alert("เกิดข้อผิดพลาด"); }
-            finally { btn.disabled = false; btn.innerText = "บันทึกทั้งหมดลง Cloud"; }
+            } catch (e) {
+                alert("เกิดข้อผิดพลาด");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "บันทึกทั้งหมดลง Sheet";
+            }
         }
 
         function openModal() { 
             document.getElementById('modal').classList.remove('hidden'); 
             document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
-            tempTasks = []; renderTemp(); 
+            tempTasks = [];
+            renderTemp();
         }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
         function addTempTask() {
             tempTasks.push({
                 topic: document.getElementById('t-topic').value,
-                partNo: document.getElementById('t-partno').value,
-                partName: document.getElementById('t-partname').value,
                 responsible: document.getElementById('t-res').value,
                 startDate: document.getElementById('t-start').value,
                 dueDate: document.getElementById('t-due').value
@@ -215,7 +172,7 @@
             renderTemp();
         }
         function renderTemp() {
-            document.getElementById('temp-list-body').innerHTML = tempTasks.map(t => `<tr class="border-b"><td class="p-2"><b>${t.topic}</b> (${t.responsible})</td></tr>`).join('');
+            document.getElementById('temp-list-body').innerHTML = tempTasks.map(t => `<tr><td>${t.topic}</td><td>${t.responsible}</td></tr>`).join('');
             document.getElementById('save-btn').disabled = tempTasks.length === 0;
         }
 
