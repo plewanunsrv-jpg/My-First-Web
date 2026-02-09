@@ -18,11 +18,10 @@
 <body class="bg-gray-50 text-gray-800 min-h-screen">
 
     <div id="app" class="max-w-7xl mx-auto p-4 md:p-6">
-        <!-- Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Meeting & Task Dashboard</h1>
-                <p class="text-gray-500 mt-1">ระบบติดตามผลการประชุมและสถานะงาน (บันทึกข้อมูลในเครื่องนี้)</p>
+                <p class="text-gray-500 mt-1">ระบบติดตามผลการประชุมและสถานะงาน (เชื่อมต่อ Google Sheets แล้ว)</p>
             </div>
             <button onclick="openModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all transform active:scale-95">
                 <i data-lucide="plus-circle"></i>
@@ -30,12 +29,8 @@
             </button>
         </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-container">
-            <!-- Stats cards injected here -->
-        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-container"></div>
 
-        <!-- Filters -->
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4">
             <div class="relative flex-1">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-5"></i>
@@ -55,16 +50,11 @@
             </div>
         </div>
 
-        <!-- Task List -->
-        <div id="task-list" class="space-y-4">
-            <!-- Cards injected here -->
-        </div>
+        <div id="task-list" class="space-y-4"></div>
     </div>
 
-    <!-- Modal -->
     <div id="modal" class="fixed inset-0 bg-black/60 hidden z-50 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-            <!-- Modal Header -->
             <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <div class="flex items-center gap-3">
                     <div class="p-2 bg-blue-600 rounded-lg text-white">
@@ -78,7 +68,6 @@
             </div>
 
             <div class="p-6 overflow-y-auto custom-scroll flex-1">
-                <!-- Step 1: Meeting Info -->
                 <div class="bg-blue-50 border border-blue-100 p-5 rounded-2xl mb-8">
                     <h3 class="text-sm font-bold text-blue-800 mb-4 uppercase tracking-widest">1. ข้อมูลการประชุมหลัก</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -94,7 +83,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <!-- Step 2: Form Input -->
                     <div class="lg:col-span-5 space-y-6">
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-widest">2. เพิ่มหัวข้อ/งาน</h3>
                         <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm space-y-4">
@@ -132,7 +120,6 @@
                         </div>
                     </div>
 
-                    <!-- Step 3: Preview List -->
                     <div class="lg:col-span-7">
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-widest mb-4 flex justify-between">
                             รายการที่จะบันทึก <span id="temp-count" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg text-xs">0 รายการ</span>
@@ -146,9 +133,7 @@
                                         <th class="p-3 text-center font-semibold">ลบ</th>
                                     </tr>
                                 </thead>
-                                <tbody id="temp-list-body" class="divide-y divide-gray-200">
-                                    <!-- Temp tasks here -->
-                                </tbody>
+                                <tbody id="temp-list-body" class="divide-y divide-gray-200"></tbody>
                             </table>
                             <div id="temp-empty" class="flex flex-col items-center justify-center p-12 text-gray-400">
                                 <i data-lucide="list-checks" class="size-12 mb-2 opacity-20"></i>
@@ -159,9 +144,8 @@
                 </div>
             </div>
 
-            <!-- Footer -->
             <div class="p-6 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-xs text-gray-400 font-medium">* ข้อมูลจะถูกบันทึกลงบนคอมพิวเตอร์เครื่องนี้เท่านั้น</p>
+                <p class="text-xs text-gray-400 font-medium">* ข้อมูลจะถูกบันทึกลง Google Sheets และคอมพิวเตอร์เครื่องนี้</p>
                 <div class="flex gap-3 w-full md:w-auto">
                     <button onclick="closeModal()" class="flex-1 md:flex-none px-6 py-2.5 border border-gray-300 rounded-xl font-semibold hover:bg-white">ยกเลิก</button>
                     <button onclick="saveAllToStorage()" id="save-btn" disabled class="flex-1 md:flex-none px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-blue-200 shadow-lg disabled:bg-gray-300 disabled:shadow-none transition-all">
@@ -173,11 +157,10 @@
     </div>
 
     <script>
-        // --- Core Data ---
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCLvouUtw8L0dzvHvOrAsGZWzedIt1eu5S7QtC8IqLo0tXICxXXb7oWn2aLBTFGHY6/exec';
         let meetings = JSON.parse(localStorage.getItem('mt_data')) || [];
         let tempTasks = [];
 
-        // --- Helper: Date & Status ---
         function calculateDaysDiff(d1, d2) {
             const date1 = new Date(d1);
             const date2 = new Date(d2);
@@ -195,7 +178,6 @@
             return 'Normal';
         }
 
-        // --- UI Logic: Modal ---
         function openModal() {
             document.getElementById('modal').classList.remove('hidden');
             document.body.classList.add('modal-active');
@@ -231,7 +213,6 @@
                 dueDate: due
             });
 
-            // Reset only task inputs
             ['t-topic', 't-partno', 't-partname', 't-res', 't-start', 't-due'].forEach(id => document.getElementById(id).value = '');
             renderTempTasks();
         }
@@ -248,7 +229,6 @@
             const count = document.getElementById('temp-count');
 
             count.innerText = `${tempTasks.length} รายการ`;
-            
             if (tempTasks.length === 0) {
                 body.innerHTML = '';
                 empty.classList.remove('hidden');
@@ -275,17 +255,17 @@
             lucide.createIcons();
         }
 
-        function saveAllToStorage() {
+        async function saveAllToStorage() {
             const mDate = document.getElementById('m-date').value;
             const mLocation = document.getElementById('m-location').value;
+            const saveBtn = document.getElementById('save-btn');
 
             if (!mDate || !mLocation) {
                 alert("กรุณากรอกวันที่และสถานที่ประชุมหลัก");
                 return;
             }
 
-            const newRecords = tempTasks.map(t => ({
-                id: Date.now() + Math.random(),
+            const newRecordsForSheet = tempTasks.map(t => ({
                 meetingDate: mDate,
                 location: mLocation,
                 topic: t.topic,
@@ -295,16 +275,45 @@
                 startDate: t.startDate,
                 dueDate: t.dueDate,
                 status: 'Pending',
-                completionDate: null
+                completionDate: ''
             }));
 
-            meetings = [...newRecords, ...meetings];
-            localStorage.setItem('mt_data', JSON.stringify(meetings));
-            closeModal();
-            renderDashboard();
+            // แสดงสถานะกำลังบันทึก
+            const originalText = saveBtn.innerText;
+            saveBtn.disabled = true;
+            saveBtn.innerText = "กำลังเชื่อมต่อ Sheet...";
+
+            try {
+                // 1. ส่งข้อมูลเข้า Google Sheets
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // สำคัญสำหรับการเชื่อมต่อ Apps Script
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newRecordsForSheet)
+                });
+
+                // 2. บันทึกลง LocalStorage (เพื่อการใช้งานออฟไลน์/รวดเร็ว)
+                const localRecords = newRecordsForSheet.map(r => ({
+                    ...r,
+                    id: Date.now() + Math.random()
+                }));
+                
+                meetings = [...localRecords, ...meetings];
+                localStorage.setItem('mt_data', JSON.stringify(meetings));
+
+                alert("บันทึกข้อมูลสำเร็จ! ข้อมูลถูกส่งไปยัง Google Sheets แล้ว");
+                closeModal();
+                renderDashboard();
+            } catch (error) {
+                console.error('Error:', error);
+                alert("บันทึกในเครื่องสำเร็จ แต่ไม่สามารถส่งข้อมูลไป Google Sheets ได้");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = originalText;
+            }
         }
 
-        // --- Dashboard Logic ---
         function toggleComplete(id) {
             meetings = meetings.map(m => {
                 if (m.id === id) {
@@ -322,7 +331,7 @@
         }
 
         function deleteRecord(id) {
-            if (confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
+            if (confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่? (ลบเฉพาะในเครื่องนี้)')) {
                 meetings = meetings.filter(m => m.id !== id);
                 localStorage.setItem('mt_data', JSON.stringify(meetings));
                 renderDashboard();
@@ -334,7 +343,6 @@
             const filterValue = document.getElementById('status-filter').value;
             const container = document.getElementById('task-list');
 
-            // 1. Filter
             const filtered = meetings.filter(m => {
                 const status = getTaskStatus(m);
                 const matchesSearch = m.topic.toLowerCase().includes(searchText) || 
@@ -349,7 +357,6 @@
                 return matchesSearch && matchesStatus;
             });
 
-            // 2. Render Stats
             const stats = { Total: meetings.length, Normal: 0, Warning: 0, Overdue: 0, Completed: 0 };
             meetings.forEach(m => {
                 const s = getTaskStatus(m);
@@ -394,7 +401,6 @@
             `;
             document.getElementById('stats-container').innerHTML = statsHtml;
 
-            // 3. Render Cards
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400">
@@ -409,11 +415,10 @@
                     const daysRemaining = calculateDaysDiff(today, m.dueDate);
                     const isDone = m.status === 'Completed';
 
-                    let statusStyles = "";
-                    if (isDone) statusStyles = "bg-green-100 text-green-700 border-green-200";
-                    else if (status === 'Overdue') statusStyles = "bg-red-100 text-red-700 border-red-200";
-                    else if (status === 'Warning') statusStyles = "bg-yellow-100 text-yellow-800 border-yellow-200";
-                    else statusStyles = "bg-blue-100 text-blue-700 border-blue-200";
+                    let statusStyles = isDone ? "bg-green-100 text-green-700 border-green-200" :
+                                     status === 'Overdue' ? "bg-red-100 text-red-700 border-red-200" :
+                                     status === 'Warning' ? "bg-yellow-100 text-yellow-800 border-yellow-200" : 
+                                     "bg-blue-100 text-blue-700 border-blue-200";
 
                     let finishedLabel = "";
                     if (isDone && m.completionDate) {
@@ -495,13 +500,12 @@
             lucide.createIcons();
         }
 
-        // Init
         window.onload = () => {
             renderDashboard();
             lucide.createIcons();
         };
     </script>
 </body>
-
 </html>
+
 
