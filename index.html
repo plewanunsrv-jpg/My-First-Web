@@ -3,504 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meeting & Task Tracker</title>
+    <title>Meeting Action Tracker</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
-        .modal-active { overflow: hidden; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background-color: #f3f4f6; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
+<body>
+    <div id="root"></div>
 
-    <div id="app" class="max-w-7xl mx-auto p-4 md:p-6">
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Meeting & Task Dashboard</h1>
-                <p class="text-gray-500 mt-1">ระบบติดตามผลการประชุมและสถานะงาน (บันทึกข้อมูลในเครื่องนี้)</p>
-            </div>
-            <button onclick="openModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all transform active:scale-95">
-                <i data-lucide="plus-circle"></i>
-                บันทึกการประชุมใหม่
-            </button>
-        </div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Plus, Calendar, User, CheckCircle2, Circle, Save, Trash2, Layout, Clock, FileText, ChevronRight } = lucide;
 
-        <!-- Stats -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-container">
-            <!-- Stats cards injected here -->
-        </div>
+        // URL API ที่คุณให้มา
+        const API_URL = "https://script.google.com/macros/s/AKfycbz1u9m2ChAxblJAMz7T3z53rKuEgSsT5jV3U0FZJK0y1mm-9JX8hd5-khx5LRUO89KF/exec";
 
-        <!-- Filters -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4">
-            <div class="relative flex-1">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-5"></i>
-                <input type="text" id="search-input" oninput="renderDashboard()" placeholder="ค้นหา หัวข้อ, Part No, ผู้รับผิดชอบ..." 
-                    class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div class="flex items-center gap-2 min-w-[200px]">
-                <i data-lucide="filter" class="text-gray-400 size-5"></i>
-                <select id="status-filter" onchange="renderDashboard()" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium">
-                    <option value="Active">⚡ งานที่ต้องทำ (Active)</option>
-                    <option value="All">📂 ประวัติทั้งหมด (History)</option>
-                    <option value="Normal">🔵 ปกติ (Normal)</option>
-                    <option value="Warning">🟡 ใกล้กำหนด (Warning)</option>
-                    <option value="Overdue">🔴 เลยกำหนด (Overdue)</option>
-                    <option value="Completed">🟢 เสร็จสิ้น (Completed)</option>
-                </select>
-            </div>
-        </div>
+        const App = () => {
+            const [tasks, setTasks] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+            const [isModalOpen, setIsModalOpen] = useState(false);
 
-        <!-- Task List -->
-        <div id="task-list" class="space-y-4">
-            <!-- Cards injected here -->
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div id="modal" class="fixed inset-0 bg-black/60 hidden z-50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-            <!-- Modal Header -->
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-blue-600 rounded-lg text-white">
-                        <i data-lucide="calendar-plus"></i>
-                    </div>
-                    <h2 class="text-xl font-bold">บันทึกการประชุมใหม่</h2>
-                </div>
-                <button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
-                    <i data-lucide="x"></i>
-                </button>
-            </div>
-
-            <div class="p-6 overflow-y-auto custom-scroll flex-1">
-                <!-- Step 1: Meeting Info -->
-                <div class="bg-blue-50 border border-blue-100 p-5 rounded-2xl mb-8">
-                    <h3 class="text-sm font-bold text-blue-800 mb-4 uppercase tracking-widest">1. ข้อมูลการประชุมหลัก</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="space-y-1">
-                            <label class="text-sm font-semibold text-gray-600">วันที่ประชุม</label>
-                            <input type="date" id="m-date" class="w-full p-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-sm font-semibold text-gray-600">สถานที่ / ช่องทาง</label>
-                            <input type="text" id="m-location" placeholder="เช่น ห้องประชุม 1 หรือ Zoom" class="w-full p-2.5 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <!-- Step 2: Form Input -->
-                    <div class="lg:col-span-5 space-y-6">
-                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-widest">2. เพิ่มหัวข้อ/งาน</h3>
-                        <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm space-y-4">
-                            <div class="space-y-1">
-                                <label class="text-sm font-semibold">หัวข้อเรื่องที่ต้องดำเนินการ</label>
-                                <input type="text" id="t-topic" placeholder="สรุปสิ่งที่ต้องทำ..." class="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="space-y-1">
-                                    <label class="text-sm font-semibold">Part No.</label>
-                                    <input type="text" id="t-partno" placeholder="ถ้ามี" class="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 text-sm">
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="text-sm font-semibold">Part Name</label>
-                                    <input type="text" id="t-partname" placeholder="ถ้ามี" class="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 text-sm">
-                                </div>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-sm font-semibold">ผู้รับผิดชอบ</label>
-                                <input type="text" id="t-res" placeholder="ระบุชื่อ..." class="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:border-blue-500 text-sm">
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="space-y-1">
-                                    <label class="text-sm font-semibold">วันเริ่ม</label>
-                                    <input type="date" id="t-start" class="w-full p-2.5 border border-gray-200 rounded-xl outline-none text-sm">
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="text-sm font-semibold">กำหนดส่ง (Due)</label>
-                                    <input type="date" id="t-due" class="w-full p-2.5 border border-gray-200 rounded-xl outline-none text-sm">
-                                </div>
-                            </div>
-                            <button onclick="addTempTask()" class="w-full py-3 bg-gray-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all">
-                                <i data-lucide="plus" class="size-4"></i> เพิ่มลงรายการ
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Step 3: Preview List -->
-                    <div class="lg:col-span-7">
-                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-widest mb-4 flex justify-between">
-                            รายการที่จะบันทึก <span id="temp-count" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg text-xs">0 รายการ</span>
-                        </h3>
-                        <div class="bg-gray-50 border border-dashed border-gray-300 rounded-2xl min-h-[300px] overflow-hidden">
-                            <table class="w-full text-sm">
-                                <thead class="bg-gray-100 text-gray-500">
-                                    <tr>
-                                        <th class="p-3 text-left font-semibold">หัวข้อ</th>
-                                        <th class="p-3 text-left font-semibold">ผู้รับผิดชอบ</th>
-                                        <th class="p-3 text-center font-semibold">ลบ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="temp-list-body" class="divide-y divide-gray-200">
-                                    <!-- Temp tasks here -->
-                                </tbody>
-                            </table>
-                            <div id="temp-empty" class="flex flex-col items-center justify-center p-12 text-gray-400">
-                                <i data-lucide="list-checks" class="size-12 mb-2 opacity-20"></i>
-                                <p>ยังไม่มีรายการที่เพิ่ม</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="p-6 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-xs text-gray-400 font-medium">* ข้อมูลจะถูกบันทึกลงบนคอมพิวเตอร์เครื่องนี้เท่านั้น</p>
-                <div class="flex gap-3 w-full md:w-auto">
-                    <button onclick="closeModal()" class="flex-1 md:flex-none px-6 py-2.5 border border-gray-300 rounded-xl font-semibold hover:bg-white">ยกเลิก</button>
-                    <button onclick="saveAllToStorage()" id="save-btn" disabled class="flex-1 md:flex-none px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-blue-200 shadow-lg disabled:bg-gray-300 disabled:shadow-none transition-all">
-                        บันทึกทั้งหมด
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- Core Data ---
-        let meetings = JSON.parse(localStorage.getItem('mt_data')) || [];
-        let tempTasks = [];
-
-        // --- Helper: Date & Status ---
-        function calculateDaysDiff(d1, d2) {
-            const date1 = new Date(d1);
-            const date2 = new Date(d2);
-            date1.setHours(0,0,0,0);
-            date2.setHours(0,0,0,0);
-            return Math.ceil((date2 - date1) / (1000 * 60 * 60 * 24));
-        }
-
-        function getTaskStatus(item) {
-            if (item.status === 'Completed') return 'Completed';
-            const today = new Date();
-            const daysLeft = calculateDaysDiff(today, item.dueDate);
-            if (daysLeft < 0) return 'Overdue';
-            if (daysLeft <= 7) return 'Warning';
-            return 'Normal';
-        }
-
-        // --- UI Logic: Modal ---
-        function openModal() {
-            document.getElementById('modal').classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
-            tempTasks = [];
-            renderTempTasks();
-            lucide.createIcons();
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-            document.body.classList.remove('modal-active');
-        }
-
-        function addTempTask() {
-            const topic = document.getElementById('t-topic').value;
-            const res = document.getElementById('t-res').value;
-            const start = document.getElementById('t-start').value;
-            const due = document.getElementById('t-due').value;
-
-            if (!topic || !res || !start || !due) {
-                alert("กรุณากรอกข้อมูล หัวข้อ, ผู้รับผิดชอบ และวันเวลาให้ครบ");
-                return;
-            }
-
-            tempTasks.push({
-                tempId: Date.now(),
-                topic,
-                partNo: document.getElementById('t-partno').value,
-                partName: document.getElementById('t-partname').value,
-                responsible: res,
-                startDate: start,
-                dueDate: due
-            });
-
-            // Reset only task inputs
-            ['t-topic', 't-partno', 't-partname', 't-res', 't-start', 't-due'].forEach(id => document.getElementById(id).value = '');
-            renderTempTasks();
-        }
-
-        function removeTemp(id) {
-            tempTasks = tempTasks.filter(t => t.tempId !== id);
-            renderTempTasks();
-        }
-
-        function renderTempTasks() {
-            const body = document.getElementById('temp-list-body');
-            const empty = document.getElementById('temp-empty');
-            const saveBtn = document.getElementById('save-btn');
-            const count = document.getElementById('temp-count');
-
-            count.innerText = `${tempTasks.length} รายการ`;
-            
-            if (tempTasks.length === 0) {
-                body.innerHTML = '';
-                empty.classList.remove('hidden');
-                saveBtn.disabled = true;
-                return;
-            }
-
-            empty.classList.add('hidden');
-            saveBtn.disabled = false;
-            body.innerHTML = tempTasks.map(t => `
-                <tr class="bg-white hover:bg-blue-50 transition-colors">
-                    <td class="p-3">
-                        <div class="font-bold">${t.topic}</div>
-                        <div class="text-[10px] text-gray-400 uppercase">${t.partNo || '-'} | ${t.partName || '-'}</div>
-                    </td>
-                    <td class="p-3 text-gray-600">${t.responsible}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="removeTemp(${t.tempId})" class="text-red-400 hover:text-red-600">
-                            <i data-lucide="trash-2" class="size-4"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function saveAllToStorage() {
-            const mDate = document.getElementById('m-date').value;
-            const mLocation = document.getElementById('m-location').value;
-
-            if (!mDate || !mLocation) {
-                alert("กรุณากรอกวันที่และสถานที่ประชุมหลัก");
-                return;
-            }
-
-            const newRecords = tempTasks.map(t => ({
-                id: Date.now() + Math.random(),
-                meetingDate: mDate,
-                location: mLocation,
-                topic: t.topic,
-                partNo: t.partNo,
-                partName: t.partName,
-                responsible: t.responsible,
-                startDate: t.startDate,
-                dueDate: t.dueDate,
-                status: 'Pending',
-                completionDate: null
-            }));
-
-            meetings = [...newRecords, ...meetings];
-            localStorage.setItem('mt_data', JSON.stringify(meetings));
-            closeModal();
-            renderDashboard();
-        }
-
-        // --- Dashboard Logic ---
-        function toggleComplete(id) {
-            meetings = meetings.map(m => {
-                if (m.id === id) {
-                    const isDone = m.status === 'Completed';
-                    return {
-                        ...m,
-                        status: isDone ? 'Pending' : 'Completed',
-                        completionDate: isDone ? null : new Date().toISOString().split('T')[0]
-                    }
+            // 1. ฟังก์ชันดึงข้อมูลจาก Google Sheets
+            const fetchTasks = async () => {
+                setIsLoading(true);
+                try {
+                    const response = await fetch(API_URL);
+                    const data = await response.json();
+                    setTasks(data);
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                } finally {
+                    setIsLoading(false);
                 }
-                return m;
-            });
-            localStorage.setItem('mt_data', JSON.stringify(meetings));
-            renderDashboard();
-        }
+            };
 
-        function deleteRecord(id) {
-            if (confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
-                meetings = meetings.filter(m => m.id !== id);
-                localStorage.setItem('mt_data', JSON.stringify(meetings));
-                renderDashboard();
-            }
-        }
+            useEffect(() => {
+                fetchTasks();
+            }, []);
 
-        function renderDashboard() {
-            const searchText = document.getElementById('search-input').value.toLowerCase();
-            const filterValue = document.getElementById('status-filter').value;
-            const container = document.getElementById('task-list');
+            // 2. ฟังก์ชันบันทึกข้อมูลลง Google Sheets
+            const handleSaveAll = async () => {
+                if (pendingTasks.length === 0) return;
 
-            // 1. Filter
-            const filtered = meetings.filter(m => {
-                const status = getTaskStatus(m);
-                const matchesSearch = m.topic.toLowerCase().includes(searchText) || 
-                                     m.responsible.toLowerCase().includes(searchText) ||
-                                     m.partNo.toLowerCase().includes(searchText);
-                
-                let matchesStatus = false;
-                if (filterValue === 'Active') matchesStatus = status !== 'Completed';
-                else if (filterValue === 'All') matchesStatus = true;
-                else matchesStatus = status === filterValue;
+                setIsLoading(true);
+                try {
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // สำคัญสำหรับ Google Apps Script
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(pendingTasks)
+                    });
+                    
+                    // หลังจากบันทึก ให้ดึงข้อมูลใหม่มาโชว์ทันที
+                    setTimeout(() => {
+                        fetchTasks();
+                        setIsModalOpen(false);
+                        setPendingTasks([]);
+                        setMeetingTopic("");
+                    }, 1000);
 
-                return matchesSearch && matchesStatus;
-            });
+                } catch (error) {
+                    alert("เกิดข้อผิดพลาดในการบันทึก");
+                    console.error(error);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
 
-            // 2. Render Stats
-            const stats = { Total: meetings.length, Normal: 0, Warning: 0, Overdue: 0, Completed: 0 };
-            meetings.forEach(m => {
-                const s = getTaskStatus(m);
-                if (s === 'Completed') stats.Completed++;
-                else if (s === 'Overdue') stats.Overdue++;
-                else if (s === 'Warning') stats.Warning++;
-                else stats.Normal++;
-            });
-
-            const statsHtml = `
-                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-                    <p class="text-xs font-bold text-gray-400 uppercase">งานทั้งหมด</p>
-                    <h3 class="text-3xl font-black text-gray-900 mt-1">${stats.Total}</h3>
+            // ... (โค้ดส่วนการจัดการ State ของ Form และ UI อื่นๆ ให้ใช้ตามไฟล์ต้นฉบับของคุณได้เลย)
+            // หมายเหตุ: ตรวจสอบให้แน่ใจว่าชื่อ Field ใน JSON (เช่น task, assignee) ตรงกับหัว Column ใน Google Sheet
+            
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    {/* ส่วน UI แสดงผลตาราง และปุ่มกดเปิด Modal */}
+                    {isLoading ? <div className="text-center">กำลังโหลดข้อมูล...</div> : (
+                        /* Render ตารางข้อมูลจาก tasks state */
+                    )}
                 </div>
-                <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 shadow-sm">
-                    <div class="flex justify-between items-start text-blue-600">
-                        <div>
-                            <p class="text-xs font-bold uppercase">ปกติ</p>
-                            <h3 class="text-3xl font-black mt-1">${stats.Normal}</h3>
-                        </div>
-                        <i data-lucide="clock" class="size-5"></i>
-                    </div>
-                </div>
-                <div class="bg-yellow-50 p-5 rounded-2xl border border-yellow-100 shadow-sm">
-                    <div class="flex justify-between items-start text-yellow-700">
-                        <div>
-                            <p class="text-xs font-bold uppercase">ใกล้กำหนด</p>
-                            <h3 class="text-3xl font-black mt-1">${stats.Warning}</h3>
-                        </div>
-                        <i data-lucide="alert-triangle" class="size-5"></i>
-                    </div>
-                </div>
-                <div class="bg-red-50 p-5 rounded-2xl border border-red-100 shadow-sm">
-                    <div class="flex justify-between items-start text-red-600">
-                        <div>
-                            <p class="text-xs font-bold uppercase">เลยกำหนด</p>
-                            <h3 class="text-3xl font-black mt-1">${stats.Overdue}</h3>
-                        </div>
-                        <i data-lucide="alert-circle" class="size-5"></i>
-                    </div>
-                </div>
-            `;
-            document.getElementById('stats-container').innerHTML = statsHtml;
-
-            // 3. Render Cards
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400">
-                        <i data-lucide="inbox" class="size-12 mx-auto mb-3 opacity-20"></i>
-                        <p class="text-lg">${filterValue === 'Active' ? 'ไม่มีงานคงค้างในขณะนี้' : 'ไม่พบข้อมูลที่ค้นหา'}</p>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = filtered.map(m => {
-                    const status = getTaskStatus(m);
-                    const today = new Date();
-                    const daysRemaining = calculateDaysDiff(today, m.dueDate);
-                    const isDone = m.status === 'Completed';
-
-                    let statusStyles = "";
-                    if (isDone) statusStyles = "bg-green-100 text-green-700 border-green-200";
-                    else if (status === 'Overdue') statusStyles = "bg-red-100 text-red-700 border-red-200";
-                    else if (status === 'Warning') statusStyles = "bg-yellow-100 text-yellow-800 border-yellow-200";
-                    else statusStyles = "bg-blue-100 text-blue-700 border-blue-200";
-
-                    let finishedLabel = "";
-                    if (isDone && m.completionDate) {
-                        const diff = calculateDaysDiff(m.dueDate, m.completionDate);
-                        finishedLabel = diff < 0 ? `ก่อนกำหนด ${Math.abs(diff)} วัน` : diff > 0 ? `ช้ากว่ากำหนด ${diff} วัน` : "ตรงกำหนด";
-                    }
-
-                    return `
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col md:flex-row gap-6 relative overflow-hidden group hover:shadow-md transition-all">
-                            <div class="absolute left-0 top-0 bottom-0 w-1.5 ${isDone ? 'bg-green-500' : status === 'Overdue' ? 'bg-red-500' : status === 'Warning' ? 'bg-yellow-400' : 'bg-blue-500'}"></div>
-                            
-                            <div class="flex-1 space-y-2">
-                                <div class="flex flex-wrap items-center gap-3 text-[11px] text-gray-400 font-bold uppercase tracking-wider">
-                                    <span class="flex items-center gap-1"><i data-lucide="calendar" class="size-3"></i> ${new Date(m.meetingDate).toLocaleDateString('th-TH')}</span>
-                                    <span class="flex items-center gap-1"><i data-lucide="map-pin" class="size-3"></i> ${m.location}</span>
-                                </div>
-                                <h3 class="text-lg font-bold text-gray-800">${m.topic}</h3>
-                                <div class="inline-flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 text-xs">
-                                    <i data-lucide="box" class="size-3.5 text-gray-400"></i>
-                                    <span class="text-gray-700 font-bold">${m.partNo || '-'}</span>
-                                    <span class="text-gray-300">|</span>
-                                    <span class="text-gray-500">${m.partName || '-'}</span>
-                                </div>
-                            </div>
-
-                            <div class="flex-1 flex flex-col justify-center md:border-l border-gray-100 md:pl-6 space-y-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="size-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-100">
-                                        ${m.responsible.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 uppercase font-bold">ผู้รับผิดชอบ</p>
-                                        <p class="text-sm font-bold text-gray-700">${m.responsible}</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 text-[11px]">
-                                    <div>
-                                        <p class="text-gray-400">เริ่มเมื่อ</p>
-                                        <p class="font-bold text-gray-600">${new Date(m.startDate).toLocaleDateString('th-TH')}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-400">กำหนดส่ง</p>
-                                        <p class="font-bold text-gray-600">${new Date(m.dueDate).toLocaleDateString('th-TH')}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col items-end justify-between min-w-[150px] md:border-l border-gray-100 md:pl-6 pt-4 md:pt-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="px-3 py-1 rounded-lg text-[10px] font-black border uppercase ${statusStyles}">
-                                        ${isDone ? 'COMPLETED' : status}
-                                    </span>
-                                    <button onclick="deleteRecord(${m.id})" class="text-gray-300 hover:text-red-500 transition-colors">
-                                        <i data-lucide="trash-2" class="size-4"></i>
-                                    </button>
-                                </div>
-
-                                <div class="text-right my-2">
-                                    ${isDone ? `
-                                        <p class="text-sm font-bold text-green-600">${finishedLabel}</p>
-                                        <p class="text-[10px] text-gray-400">เมื่อ ${new Date(m.completionDate).toLocaleDateString('th-TH')}</p>
-                                    ` : `
-                                        <p class="text-3xl font-black ${daysRemaining < 0 ? 'text-red-500' : daysRemaining <= 7 ? 'text-yellow-600' : 'text-blue-600'}">
-                                            ${Math.abs(daysRemaining)}
-                                        </p>
-                                        <p class="text-[10px] text-gray-400 font-bold uppercase">${daysRemaining < 0 ? 'วัน (ล่าช้า)' : 'วัน (คงเหลือ)'}</p>
-                                    `}
-                                </div>
-
-                                <button onclick="toggleComplete(${m.id})" 
-                                    class="w-full py-2 px-4 rounded-xl text-xs font-bold transition-all border ${isDone ? 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50' : 'bg-green-600 text-white border-transparent hover:bg-green-700 shadow-lg shadow-green-100'}">
-                                    ${isDone ? 'ยกเลิกสถานะเสร็จ' : 'แจ้งงานเสร็จสิ้น'}
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            lucide.createIcons();
-        }
-
-        // Init
-        window.onload = () => {
-            renderDashboard();
-            lucide.createIcons();
+            );
         };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
-
 </html>
