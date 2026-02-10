@@ -5,44 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meeting Action Tracker</title>
     
-    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Noto Sans Thai -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
-        body {
-            font-family: 'Noto Sans Thai', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
+        body { font-family: 'Noto Sans Thai', sans-serif; background-color: #f3f4f6; }
     </style>
 </head>
 <body>
@@ -50,90 +23,20 @@
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+        
+        // ประกาศ Icons จาก Library
+        const { Plus, Trash2, CheckCircle, Clock, AlertTriangle, Calendar: CalendarIcon, Search, Save, X: XIcon, Filter: FilterIcon, ListPlus, User } = lucide;
 
-        // --- Icons Components (SVG) ---
-        const Icon = ({ children, size = 20, className = "" }) => (
-            <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width={size} 
-                height={size} 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className={className}
-            >
-                {children}
-            </svg>
-        );
+        // URL API ของคุณ
+        const API_URL = "https://script.google.com/macros/s/AKfycbz1u9m2ChAxblJAMz7T3z53rKuEgSsT5jV3U0FZJK0y1mm-9JX8hd5-khx5LRUO89KF/exec";
 
-        const Plus = (props) => <Icon {...props}><path d="M5 12h14"/><path d="M12 5v14"/></Icon>;
-        const Trash2 = (props) => <Icon {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></Icon>;
-        const CheckCircle = (props) => <Icon {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
-        const Clock = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Icon>;
-        const AlertTriangle = (props) => <Icon {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></Icon>;
-        const CalendarIcon = (props) => <Icon {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></Icon>;
-        const Search = (props) => <Icon {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></Icon>;
-        const Save = (props) => <Icon {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></Icon>;
-        const XIcon = (props) => <Icon {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Icon>;
-        const FilterIcon = (props) => <Icon {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></Icon>;
-        const ListPlus = (props) => <Icon {...props}><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/></Icon>;
-        const User = (props) => <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>;
-
-        // --- Main App Component ---
         const App = () => {
-            // Mock Data
-            const initialData = [
-                {
-                    id: 1,
-                    meetingTopic: "วางแผนงบประมาณ Q4",
-                    meetingDate: "2023-10-15",
-                    task: "สรุปรายรับรายจ่ายย้อนหลัง",
-                    assignee: "สมชาย",
-                    startDate: "2023-10-16",
-                    dueDate: "2023-10-20", 
-                    isCompleted: false
-                },
-                {
-                    id: 2,
-                    meetingTopic: "อัปเดต Project Alpha",
-                    meetingDate: "2023-10-25",
-                    task: "ออกแบบ UX/UI หน้า Dashboard",
-                    assignee: "วิภา",
-                    startDate: "2023-10-26",
-                    dueDate: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().split('T')[0], 
-                    isCompleted: false
-                },
-                {
-                    id: 3,
-                    meetingTopic: "ประชุม Marketing ประจำเดือน",
-                    meetingDate: "2023-10-28",
-                    task: "ยิง Ads Facebook แคมเปญใหม่",
-                    assignee: "ก้อง",
-                    startDate: "2023-10-29",
-                    dueDate: new Date(new Date().setDate(new Date().getDate() + 10)).toISOString().split('T')[0], 
-                    isCompleted: false
-                },
-                {
-                    id: 4,
-                    meetingTopic: "สรุป KPI ทีมขาย",
-                    meetingDate: "2023-10-10",
-                    task: "รวบรวมยอดขายรายบุคคล",
-                    assignee: "ลัดดา",
-                    startDate: "2023-10-11",
-                    dueDate: "2023-10-15",
-                    isCompleted: true 
-                }
-            ];
-
-            const [tasks, setTasks] = useState(initialData);
+            const [tasks, setTasks] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
             const [filterText, setFilterText] = useState("");
-            const [statusFilter, setStatusFilter] = useState("all");
             const [isModalOpen, setIsModalOpen] = useState(false);
-
-            // Modal State
+            const [pendingTasks, setPendingTasks] = useState([]);
+            
             const [meetingInfo, setMeetingInfo] = useState({
                 topic: "",
                 date: new Date().toISOString().split('T')[0]
@@ -146,441 +49,134 @@
                 dueDate: ""
             });
 
-            const [pendingTasks, setPendingTasks] = useState([]);
-
-            // Helper Functions
-            const getStatus = (task) => {
-                if (task.isCompleted) return { type: "completed", status: "เสร็จสิ้น", color: "bg-green-100 text-green-800 border-green-300", icon: <CheckCircle size={16} /> };
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const due = new Date(task.dueDate);
-                const diffTime = due - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays < 0) {
-                    return { type: "overdue", status: "เลยกำหนด", color: "bg-red-100 text-red-800 border-red-300", icon: <AlertTriangle size={16} /> };
-                } else if (diffDays <= 3) {
-                    return { type: "warning", status: "ใกล้ถึงกำหนด", color: "bg-yellow-100 text-yellow-800 border-yellow-300", icon: <Clock size={16} /> };
-                } else {
-                    return { type: "inprogress", status: "ดำเนินการอยู่", color: "bg-blue-900 text-white border-blue-800", icon: <Clock size={16} /> };
+            // ดึงข้อมูลจาก Sheets
+            const fetchTasks = async () => {
+                setIsLoading(true);
+                try {
+                    const response = await fetch(API_URL);
+                    const data = await response.json();
+                    setTasks(data);
+                } catch (error) {
+                    console.error("Fetch error:", error);
+                } finally {
+                    setIsLoading(false);
                 }
             };
 
-            const handleMeetingChange = (e) => {
-                setMeetingInfo({ ...meetingInfo, [e.target.name]: e.target.value });
-            };
+            useEffect(() => { fetchTasks(); }, []);
 
-            const handleTaskChange = (e) => {
-                setCurrentTask({ ...currentTask, [e.target.name]: e.target.value });
+            // บันทึกข้อมูลลง Sheets
+            const handleSaveAll = async () => {
+                if (pendingTasks.length === 0) return;
+                setIsLoading(true);
+                try {
+                    const formData = new URLSearchParams();
+                    formData.append('data', JSON.stringify(pendingTasks));
+
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData.toString()
+                    });
+                    
+                    setTimeout(() => {
+                        fetchTasks();
+                        setIsModalOpen(false);
+                        setPendingTasks([]);
+                        setMeetingInfo({ topic: "", date: new Date().toISOString().split('T')[0] });
+                    }, 1500);
+                } catch (error) {
+                    alert("บันทึกไม่สำเร็จ");
+                    setIsLoading(false);
+                }
             };
 
             const addPendingTask = () => {
                 if (!currentTask.task || !currentTask.dueDate) return;
-
-                const newItem = {
-                    id: Date.now() + Math.random(),
-                    meetingTopic: meetingInfo.topic,
-                    meetingDate: meetingInfo.date,
-                    ...currentTask,
-                    isCompleted: false
-                };
-
+                const newItem = { id: Date.now(), meetingTopic: meetingInfo.topic, meetingDate: meetingInfo.date, ...currentTask, isCompleted: false };
                 setPendingTasks([...pendingTasks, newItem]);
-                
-                setCurrentTask({
-                    task: "",
-                    assignee: "",
-                    startDate: new Date().toISOString().split('T')[0],
-                    dueDate: ""
-                });
-            };
-
-            const removePendingTask = (index) => {
-                const newPending = [...pendingTasks];
-                newPending.splice(index, 1);
-                setPendingTasks(newPending);
-            };
-
-            const handleSaveAll = () => {
-                if (pendingTasks.length === 0) return;
-                setTasks([...pendingTasks, ...tasks]);
-                
-                setIsModalOpen(false);
-                setPendingTasks([]);
-                setMeetingInfo({ topic: "", date: new Date().toISOString().split('T')[0] });
                 setCurrentTask({ task: "", assignee: "", startDate: new Date().toISOString().split('T')[0], dueDate: "" });
             };
 
-            const toggleComplete = (id) => {
-                setTasks(tasks.map(t => t.id === id ? { ...t, isCompleted: !t.isCompleted } : t));
-            };
-
-            const deleteTask = (id) => {
-                setTasks(tasks.filter(t => t.id !== id));
-            };
-
-            const filteredTasks = tasks.filter(t => {
-                const matchesSearch = 
-                    t.meetingTopic.toLowerCase().includes(filterText.toLowerCase()) || 
-                    t.task.toLowerCase().includes(filterText.toLowerCase()) ||
-                    t.assignee.toLowerCase().includes(filterText.toLowerCase());
-                const { type } = getStatus(t);
-                const matchesStatus = statusFilter === "all" || type === statusFilter;
-                return matchesSearch && matchesStatus;
-            });
-
-            const stats = {
-                total: tasks.length,
-                completed: tasks.filter(t => t.isCompleted).length,
-                overdue: tasks.filter(t => !t.isCompleted && new Date(t.dueDate) < new Date().setHours(0,0,0,0)).length,
-                pending: tasks.filter(t => !t.isCompleted).length
-            };
-
             return (
-                <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
+                <div className="min-h-screen bg-gray-50 p-4 md:p-8">
                     <div className="max-w-7xl mx-auto space-y-6">
-                        
-                        {/* Header */}
-                        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-                                    <CalendarIcon className="text-blue-600" />
-                                    Meeting Action Tracker
-                                </h1>
-                                <p className="text-gray-500 mt-1">ระบบติดตามงานจากการประชุม</p>
-                            </div>
-                            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                                <div className="hidden md:block text-sm text-gray-400">
-                                    {new Date().toLocaleDateString('th-TH', { dateStyle: 'long' })}
-                                </div>
-                                <button 
-                                    onClick={() => setIsModalOpen(true)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-md whitespace-nowrap"
-                                >
-                                    <Plus size={20} /> บันทึกข้อมูล
-                                </button>
-                            </div>
+                        <header className="flex justify-between items-center mb-6">
+                            <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                                <CalendarIcon className="text-blue-600" /> Tracker
+                            </h1>
+                            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md">
+                                <Plus size={20} /> บันทึกข้อมูล
+                            </button>
                         </header>
 
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <p className="text-sm text-gray-500">งานทั้งหมด</p>
-                                <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <p className="text-sm text-gray-500">ดำเนินการอยู่</p>
-                                <p className="text-2xl font-bold text-blue-600">{stats.pending}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <p className="text-sm text-gray-500">เลยกำหนด (Overdue)</p>
-                                <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <p className="text-sm text-gray-500">เสร็จสิ้น</p>
-                                <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
-                            </div>
-                        </div>
-
-                        {/* Main Content Area */}
-                        <div className="space-y-4">
-                            <div className="flex flex-col md:flex-row gap-3">
-                                <div className="relative flex-1">
-                                    <input 
-                                        type="text"
-                                        placeholder="ค้นหา หัวข้อ, งาน, หรือ ชื่อคน..."
-                                        value={filterText}
-                                        onChange={(e) => setFilterText(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                    <span className="absolute left-3 top-3.5 text-gray-400">
-                                        <Search size={20} />
-                                    </span>
-                                </div>
-                                
-                                <div className="relative md:w-64">
-                                    <span className="absolute left-3 top-3.5 text-gray-500 pointer-events-none">
-                                        <FilterIcon size={20} />
-                                    </span>
-                                    <select 
-                                        value={statusFilter}
-                                        onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="w-full pl-10 pr-8 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer"
-                                    >
-                                        <option value="all">สถานะ: ทั้งหมด</option>
-                                        <option value="inprogress">🔵 ดำเนินการอยู่</option>
-                                        <option value="warning">🟡 ใกล้ถึงกำหนด</option>
-                                        <option value="overdue">🔴 เลยกำหนด</option>
-                                        <option value="completed">🟢 เสร็จสิ้น</option>
-                                    </select>
-                                    <div className="absolute right-3 top-4 pointer-events-none">
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
-                                            <tr>
-                                                <th className="p-4 w-12">สถานะ</th>
-                                                <th className="p-4">รายละเอียดงาน</th>
-                                                <th className="p-4 text-center">กำหนดการ</th>
-                                                <th className="p-4 text-center">จัดการ</th>
+                        {/* ตารางแสดงผล */}
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden border">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b font-semibold">
+                                    <tr>
+                                        <th className="p-4">งานที่ต้องทำ</th>
+                                        <th className="p-4">ผู้รับผิดชอบ</th>
+                                        <th className="p-4 text-center">กำหนดส่ง</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {isLoading ? (
+                                        <tr><td colSpan="3" className="p-10 text-center text-gray-500">กำลังดึงข้อมูลจาก Google Sheets...</td></tr>
+                                    ) : tasks.length > 0 ? (
+                                        tasks.map(item => (
+                                            <tr key={item.id} className="hover:bg-gray-50 transition">
+                                                <td className="p-4">
+                                                    <div className="font-bold text-gray-800">{item.task}</div>
+                                                    <div className="text-xs text-blue-600">{item.meetingTopic}</div>
+                                                </td>
+                                                <td className="p-4 text-sm text-gray-600">{item.assignee}</td>
+                                                <td className="p-4 text-center text-sm font-medium">{item.dueDate}</td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {filteredTasks.length > 0 ? (
-                                                filteredTasks.map((item) => {
-                                                    const { status, color, icon } = getStatus(item);
-                                                    return (
-                                                        <tr key={item.id} className="hover:bg-gray-50 transition">
-                                                            <td className="p-4 align-top">
-                                                                <button 
-                                                                    onClick={() => toggleComplete(item.id)}
-                                                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${item.isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-blue-500'}`}
-                                                                >
-                                                                    {item.isCompleted && <CheckCircle size={14} />}
-                                                                </button>
-                                                            </td>
-                                                            <td className="p-4 align-top">
-                                                                <div className="flex flex-col gap-1">
-                                                                    <span className="font-semibold text-gray-800 text-base">{item.task}</span>
-                                                                    <span className="text-gray-500 text-xs flex items-center gap-1">
-                                                                        <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-medium">{item.meetingTopic}</span>
-                                                                        {item.assignee && <span>• รับผิดชอบโดย: {item.assignee}</span>}
-                                                                    </span>
-                                                                    <div className={`inline-flex items-center gap-1 w-fit px-2 py-0.5 rounded text-xs font-medium border mt-1 ${color}`}>
-                                                                        {icon} {status}
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4 text-center align-top whitespace-nowrap">
-                                                                <div className="flex flex-col text-xs text-gray-500">
-                                                                    <span>เริ่ม: {new Date(item.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</span>
-                                                                    <span className={`font-bold ${item.isCompleted ? 'text-green-600' : 'text-gray-800'}`}>
-                                                                        ส่ง: {new Date(item.dueDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
-                                                                    </span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4 text-center align-top">
-                                                                <button 
-                                                                    onClick={() => deleteTask(item.id)}
-                                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                                                                    title="ลบรายการ"
-                                                                >
-                                                                    <Trash2 size={18} />
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="4" className="p-8 text-center text-gray-400">
-                                                        ไม่พบข้อมูลงานที่ค้นหา
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="3" className="p-10 text-center text-gray-400">ยังไม่มีข้อมูลงาน</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
 
-                        {/* Modal */}
+                        {/* Modal บันทึกข้อมูล */}
                         {isModalOpen && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm overflow-y-auto">
-                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
-                                    
-                                    {/* Modal Header */}
-                                    <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
-                                        <div>
-                                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                                <Plus className="text-blue-600" size={24} /> บันทึกการประชุม
-                                            </h2>
-                                            <p className="text-sm text-gray-500 mt-1">สร้าง 1 การประชุม และเพิ่มได้หลายงาน</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => setIsModalOpen(false)}
-                                            className="text-gray-400 hover:text-gray-600 transition"
-                                        >
-                                            <XIcon size={24} />
-                                        </button>
+                            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                                <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-xl font-bold flex items-center gap-2"><Plus className="text-blue-600"/> บันทึกงานใหม่</h2>
+                                        <button onClick={() => setIsModalOpen(false)}><XIcon className="text-gray-400"/></button>
                                     </div>
                                     
-                                    <div className="p-6 overflow-y-auto custom-scrollbar">
-                                        
-                                        {/* 1. Header Info */}
-                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
-                                            <h3 className="text-blue-800 font-semibold mb-3 flex items-center gap-2">
-                                                <CalendarIcon size={18} /> ข้อมูลการประชุมหลัก
-                                            </h3>
-                                            <div className="grid md:grid-cols-3 gap-4">
-                                                <div className="md:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">หัวข้อการประชุม</label>
-                                                    <input 
-                                                        type="text" 
-                                                        name="topic"
-                                                        value={meetingInfo.topic}
-                                                        onChange={handleMeetingChange}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                                                        placeholder="เช่น ประชุมวางแผนประจำปี..."
-                                                        autoFocus
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ประชุม</label>
-                                                    <input 
-                                                        type="date" 
-                                                        name="date"
-                                                        value={meetingInfo.date}
-                                                        onChange={handleMeetingChange}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none bg-white"
-                                                    />
-                                                </div>
-                                            </div>
+                                    <div className="bg-blue-50 p-4 rounded-lg mb-6 grid grid-cols-2 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="text-xs font-bold text-gray-500">หัวข้อการประชุม</label>
+                                            <input type="text" value={meetingInfo.topic} onChange={(e) => setMeetingInfo({...meetingInfo, topic: e.target.value})} className="w-full p-2 border rounded mt-1 outline-none focus:ring-2 focus:ring-blue-500" placeholder="ระบุหัวข้อประชุม..."/>
                                         </div>
-
-                                        {/* 2. Add Task Form */}
-                                        <div className="border-b border-gray-200 pb-6 mb-6">
-                                            <h3 className="text-gray-700 font-semibold mb-3 flex items-center gap-2">
-                                                <ListPlus size={18} /> เพิ่มรายการงาน (Action Item)
-                                            </h3>
-                                            <div className="space-y-4">
-                                                <div className="grid md:grid-cols-2 gap-4">
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">งานที่ต้องติดตาม</label>
-                                                        <input
-                                                            type="text" 
-                                                            name="task"
-                                                            value={currentTask.task}
-                                                            onChange={handleTaskChange}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                                            placeholder="รายละเอียดงาน..."
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">ผู้รับผิดชอบ</label>
-                                                        <div className="relative">
-                                                            <input 
-                                                                type="text" 
-                                                                name="assignee"
-                                                                value={currentTask.assignee}
-                                                                onChange={handleTaskChange}
-                                                                className="w-full pl-9 px-3 py-2 border border-gray-300 rounded-lg outline-none"
-                                                                placeholder="ชื่อผู้รับผิดชอบ"
-                                                            />
-                                                            <span className="absolute left-3 top-2.5 text-gray-400">
-                                                                <User size={16} />
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <div className="flex-1">
-                                                            <label className="block text-sm font-medium text-gray-700 mb-1">วันเริ่ม</label>
-                                                            <input 
-                                                                type="date" 
-                                                                name="startDate"
-                                                                value={currentTask.startDate}
-                                                                onChange={handleTaskChange}
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none text-sm"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <label className="block text-sm font-medium text-gray-700 mb-1">วันส่ง (Due)</label>
-                                                            <input 
-                                                                type="date" 
-                                                                name="dueDate"
-                                                                value={currentTask.dueDate}
-                                                                onChange={handleTaskChange}
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-red-400 text-sm"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    type="button"
-                                                    onClick={addPendingTask}
-                                                    disabled={!currentTask.task || !currentTask.dueDate || !meetingInfo.topic}
-                                                    className="w-full md:w-auto bg-gray-800 hover:bg-black text-white px-6 py-2 rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    <Plus size={18} /> เพิ่มรายการลงในลิสต์
-                                                </button>
-                                                {!meetingInfo.topic && <p className="text-xs text-red-500">* กรุณาระบุหัวข้อการประชุมก่อนเพิ่มงาน</p>}
-                                            </div>
-                                        </div>
-
-                                        {/* 3. Pending List */}
-                                        <div>
-                                            <h3 className="text-gray-700 font-semibold mb-3 flex justify-between items-center">
-                                                <span>รายการเตรียมบันทึก ({pendingTasks.length})</span>
-                                            </h3>
-                                            
-                                            {pendingTasks.length > 0 ? (
-                                                <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
-                                                    <table className="w-full text-sm text-left">
-                                                        <thead className="bg-gray-100 text-gray-600 font-medium">
-                                                            <tr>
-                                                                <th className="p-3">งาน</th>
-                                                                <th className="p-3">ผู้รับผิดชอบ</th>
-                                                                <th className="p-3 text-center">วันส่ง</th>
-                                                                <th className="p-3 text-center">ลบ</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-gray-200">
-                                                            {pendingTasks.map((t, index) => (
-                                                                <tr key={index} className="bg-white">
-                                                                    <td className="p-3">{t.task}</td>
-                                                                    <td className="p-3">{t.assignee || "-"}</td>
-                                                                    <td className="p-3 text-center text-gray-500">
-                                                                        {new Date(t.dueDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
-                                                                    </td>
-                                                                    <td className="p-3 text-center">
-                                                                        <button 
-                                                                            onClick={() => removePendingTask(index)}
-                                                                            className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded"
-                                                                        >
-                                                                            <Trash2 size={16} />
-                                                                        </button>
-                                                                    </td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            ) : (
-                                                <div className="text-center py-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-gray-400">
-                                                    ยังไม่มีรายการที่เพิ่ม
-                                                </div>
-                                            )}
-                                        </div>
-
                                     </div>
 
-                                    {/* Modal Footer */}
-                                    <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-                                        <button 
-                                            onClick={() => setIsModalOpen(false)}
-                                            className="px-6 py-2.5 rounded-lg text-gray-600 hover:bg-gray-200 transition font-medium"
-                                        >
-                                            ยกเลิก
-                                        </button>
-                                        <button 
-                                            onClick={handleSaveAll}
-                                            disabled={pendingTasks.length === 0}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                                        >
-                                            <Save size={20} /> บันทึกทั้งหมด ({pendingTasks.length})
-                                        </button>
+                                    <div className="space-y-4 border-t pt-4">
+                                        <input type="text" placeholder="รายละเอียดงาน..." value={currentTask.task} onChange={(e) => setCurrentTask({...currentTask, task: e.target.value})} className="w-full p-2 border rounded"/>
+                                        <input type="text" placeholder="ชื่อผู้รับผิดชอบ" value={currentTask.assignee} onChange={(e) => setCurrentTask({...currentTask, assignee: e.target.value})} className="w-full p-2 border rounded"/>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500">วันส่ง (Due)</label>
+                                                <input type="date" value={currentTask.dueDate} onChange={(e) => setCurrentTask({...currentTask, dueDate: e.target.value})} className="w-full p-2 border rounded"/>
+                                            </div>
+                                        </div>
+                                        <button onClick={addPendingTask} className="w-full bg-gray-800 text-white p-2 rounded hover:bg-black transition">เพิ่มลงรายการ ({pendingTasks.length})</button>
                                     </div>
 
+                                    <div className="mt-6 border-t pt-4 flex justify-end gap-3">
+                                        <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-gray-500">ยกเลิก</button>
+                                        <button onClick={handleSaveAll} disabled={pendingTasks.length === 0} className="bg-blue-600 text-white px-8 py-2 rounded-lg shadow-lg disabled:opacity-50">บันทึกทั้งหมดลง Sheet</button>
+                                    </div>
                                 </div>
                             </div>
                         )}
-
                     </div>
                 </div>
             );
