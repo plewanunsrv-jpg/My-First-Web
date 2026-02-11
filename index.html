@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meeting & Task Dashboard</title>
+    <title>Team Task Dashboard (Google Sheets)</title>
     
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,7 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- Load Babel for JSX -->
+    <!-- Load Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- Font -->
@@ -20,21 +20,34 @@
     
     <style>
         body { font-family: 'Sarabun', sans-serif; }
+        .loading-overlay {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(2px);
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
     <div id="root"></div>
 
     <script type="text/babel">
+        // **************************************************************************
+        //    👇 ใส่ URL ของคุณให้เรียบร้อยแล้วครับ ใช้งานได้เลย 👇
+        // **************************************************************************
+        
+        const API_URL = "https://script.google.com/macros/s/AKfycbz0VehS_aSVDjdyPD1WgTMheA7Q0ny_ehq190eklxo0kYjPscHHas9f60_nqJmXj2jD/exec"; 
+        
+        // **************************************************************************
+
+
         const { useState, useMemo, useEffect } = React;
 
-        // --- Icons (Inline SVG for standalone usage) ---
+        // --- Icons ---
         const Icon = ({ name, className }) => {
             const icons = {
                 Plus: <path d="M12 5v14M5 12h14" />,
-                Clock: <path d="M12 6v6l4 2" />, // Circle part handled by container usually, but basic path here
+                Clock: <path d="M12 6v6l4 2" />, 
                 AlertTriangle: <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01" />,
-                AlertCircle: <path d="M12 8v4M12 16h.01" />, // Circle handled by wrapper usually
+                AlertCircle: <path d="M12 8v4M12 16h.01" />, 
                 Search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
                 Filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />,
                 Inbox: <path d="M22 12h-6l-2 3h-4l-2-3H2" />,
@@ -42,56 +55,32 @@
                 Calendar: <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />,
                 User: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />,
                 Tag: <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />,
-                FileText: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />,
                 CheckCircle: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />,
                 Check: <path d="M20 6L9 17l-5-5" />,
-                Package: <path d="M16.5 9.4L7.5 4.21" />,
                 Trash2: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />,
                 ListPlus: <path d="M11 12H3M16 6H3M16 18H3M18 9v6M21 12h-6" />,
-                CalendarDays: <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                CalendarDays: <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />,
+                Refresh: <path d="M23 4v6h-6M1 20v-6h6" />, 
+                Loader: <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
             };
-            
-            // Adjust specific SVG wrappers if needed, simplified for generic use
             return (
-                <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="24" height="24" viewBox="0 0 24 24" 
-                    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                    className={className}
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                     {icons[name]}
-                    {/* Extra paths for composite icons */}
+                    {/* Additional shapes for complex icons */}
                     {name === 'Clock' && <circle cx="12" cy="12" r="10" />}
                     {name === 'AlertCircle' && <circle cx="12" cy="12" r="10" />}
-                    {name === 'Calendar' && <line x1="16" y1="2" x2="16" y2="6" />}
-                    {name === 'Calendar' && <line x1="8" y1="2" x2="8" y2="6" />}
-                    {name === 'Calendar' && <line x1="3" y1="10" x2="21" y2="10" />}
-                    {name === 'CalendarDays' && <line x1="16" y1="2" x2="16" y2="6" />}
-                    {name === 'CalendarDays' && <line x1="8" y1="2" x2="8" y2="6" />}
-                    {name === 'CalendarDays' && <line x1="3" y1="10" x2="21" y2="10" />}
-                    {name === 'CalendarDays' && <path d="M8 14h.01" />}
-                    {name === 'CalendarDays' && <path d="M12 14h.01" />}
-                    {name === 'CalendarDays' && <path d="M16 14h.01" />}
-                    {name === 'CalendarDays' && <path d="M8 18h.01" />}
-                    {name === 'CalendarDays' && <path d="M12 18h.01" />}
-                    {name === 'CalendarDays' && <path d="M16 18h.01" />}
+                    {name === 'Calendar' && <><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>}
+                    {name === 'CalendarDays' && <><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></>}
                     {name === 'User' && <circle cx="12" cy="7" r="4" />}
                     {name === 'Tag' && <line x1="7" y1="7" x2="7.01" y2="7" />}
-                    {name === 'FileText' && <polyline points="14 2 14 8 20 8" />}
-                    {name === 'FileText' && <line x1="16" y1="13" x2="8" y2="13" />}
-                    {name === 'FileText' && <line x1="16" y1="17" x2="8" y2="17" />}
-                    {name === 'FileText' && <polyline points="10 9 9 9 8 9" />}
                     {name === 'CheckCircle' && <polyline points="22 4 12 14.01 9 11.01" />}
-                    {name === 'Package' && <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />}
-                    {name === 'Package' && <polyline points="3.27 6.96 12 12.01 20.73 6.96" />}
-                    {name === 'Package' && <line x1="12" y1="22.08" x2="12" y2="12" />}
                     {name === 'Inbox' && <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />}
+                    {name === 'Refresh' && <><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" /></>}
                 </svg>
             );
         };
 
-        // --- Components ---
-
+        // --- Stats Component ---
         const StatCard = ({ title, count, type, iconName }) => {
             const styles = {
                 default: { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-900', iconColor: 'text-gray-400' },
@@ -100,286 +89,101 @@
                 red: { bg: 'bg-red-50', border: 'border-red-100', text: 'text-red-600', iconColor: 'text-red-500' },
                 green: { bg: 'bg-green-50', border: 'border-green-100', text: 'text-green-600', iconColor: 'text-green-500' },
             };
-
             const style = styles[type] || styles.default;
-
             return (
-                <div className={`${style.bg} border ${style.border} rounded-xl p-4 flex flex-col justify-between h-32 shadow-sm transition-all hover:shadow-md`}>
+                <div className={`${style.bg} border ${style.border} rounded-xl p-4 flex flex-col justify-between h-32 shadow-sm`}>
                     <div className="flex justify-between items-start">
-                        <span className={`text-sm font-medium ${type === 'default' ? 'text-gray-500' : style.text}`}>
-                            {title}
-                        </span>
+                        <span className={`text-sm font-medium ${type === 'default' ? 'text-gray-500' : style.text}`}>{title}</span>
                         {iconName && <Icon name={iconName} className={`w-5 h-5 ${style.iconColor}`} />}
                     </div>
-                    <div className={`text-4xl font-bold ${style.text}`}>
-                        {count}
-                    </div>
+                    <div className={`text-4xl font-bold ${style.text}`}>{count}</div>
                 </div>
             );
         };
 
-        const Modal = ({ isOpen, onClose, onSubmit }) => {
+        // --- Modal Component ---
+        const Modal = ({ isOpen, onClose, onSubmit, isSaving }) => {
             const [topic, setTopic] = useState('');
             const [meetingDate, setMeetingDate] = useState(new Date().toISOString().split('T')[0]);
             const [pendingItems, setPendingItems] = useState([]);
-            const [currentItem, setCurrentItem] = useState({
-                partNo: '',
-                partName: '',
-                assignee: '',
-                startDate: '',
-                dueDate: '',
-                details: ''
-            });
+            const [currentItem, setCurrentItem] = useState({ partNo: '', partName: '', assignee: '', startDate: '', dueDate: '', details: '' });
 
             if (!isOpen) return null;
 
-            const handleInputChange = (e) => {
-                const { name, value } = e.target;
-                setCurrentItem(prev => ({ ...prev, [name]: value }));
-            };
-
             const handleAddItem = () => {
                 if (!currentItem.assignee || !currentItem.startDate || !currentItem.dueDate) {
-                    alert('กรุณากรอกข้อมูล ผู้รับผิดชอบ และวันที่ให้ครบถ้วน');
-                    return;
+                    alert('กรุณากรอกข้อมูล ผู้รับผิดชอบ และวันที่ให้ครบถ้วน'); return;
                 }
-
                 setPendingItems(prev => [...prev, { ...currentItem, tempId: Date.now() }]);
-                setCurrentItem({
-                    partNo: '',
-                    partName: '',
-                    assignee: '',
-                    startDate: currentItem.startDate, 
-                    dueDate: currentItem.dueDate,
-                    details: ''
-                });
-            };
-
-            const handleRemoveItem = (tempId) => {
-                setPendingItems(prev => prev.filter(item => item.tempId !== tempId));
+                setCurrentItem({ partNo: '', partName: '', assignee: '', startDate: currentItem.startDate, dueDate: currentItem.dueDate, details: '' });
             };
 
             const handleSubmitAll = () => {
-                if (!topic) {
-                    alert('กรุณากรอกหัวข้อการประชุม');
-                    return;
-                }
-                if (!meetingDate) {
-                    alert('กรุณาระบุวันที่ประชุม');
-                    return;
-                }
-
+                if (!topic || !meetingDate) { alert('กรุณากรอกหัวข้อและวันที่ประชุม'); return; }
                 let finalItems = [...pendingItems];
-
                 if (currentItem.assignee && currentItem.startDate && currentItem.dueDate) {
                     finalItems.push({ ...currentItem, tempId: Date.now() });
                 }
-
-                if (finalItems.length === 0) {
-                    alert('กรุณาเพิ่มรายการงานอย่างน้อย 1 รายการ');
-                    return;
-                }
+                if (finalItems.length === 0) { alert('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ'); return; }
 
                 const tasks = finalItems.map((item, index) => ({
                     id: Date.now() + index + Math.random(),
-                    topic: topic,
-                    meetingDate: meetingDate,
-                    ...item,
-                    status: 'active',
-                    completedAt: null,
-                    createdAt: new Date().toISOString()
+                    topic, meetingDate, ...item,
+                    status: 'active', completedAt: '', createdAt: new Date().toISOString()
                 }));
-
                 onSubmit(tasks);
-                setTopic('');
-                setMeetingDate(new Date().toISOString().split('T')[0]);
-                setPendingItems([]);
-                setCurrentItem({ partNo: '', partName: '', assignee: '', startDate: '', dueDate: '', details: '' });
-                onClose();
+                // Clear state
+                setTopic(''); setPendingItems([]); onClose();
             };
 
             return (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="bg-blue-600 px-6 py-4 flex justify-between items-center flex-shrink-0">
-                            <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-                                <Icon name="Plus" className="w-5 h-5" /> บันทึกการประชุม (Multiple Items)
-                            </h3>
-                            <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors">
-                                <Icon name="X" className="w-6 h-6" />
-                            </button>
+                        <div className="bg-blue-600 px-6 py-4 flex justify-between items-center text-white">
+                            <h3 className="font-semibold text-lg flex items-center gap-2"><Icon name="Plus" className="w-5 h-5"/> บันทึกการประชุม</h3>
+                            <button onClick={onClose}><Icon name="X" className="w-6 h-6"/></button>
                         </div>
-                        
                         <div className="flex flex-col md:flex-row h-full overflow-hidden">
                             <div className="w-full md:w-5/12 p-6 overflow-y-auto border-r border-gray-100 bg-gray-50/50">
-                                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                    1. ข้อมูลการประชุม
-                                </h4>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">หัวข้อการประชุม *</label>
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-2.5 text-gray-400"><Icon name="FileText" className="w-5 h-5"/></div>
-                                        <input 
-                                            value={topic}
-                                            onChange={(e) => setTopic(e.target.value)}
-                                            type="text" 
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white" 
-                                            placeholder="เช่น สรุปงานประจำเดือน..." 
-                                        />
-                                    </div>
+                                <h4 className="font-bold text-gray-800 mb-4">1. ข้อมูลการประชุม</h4>
+                                <div className="space-y-4">
+                                    <div><label className="text-sm font-medium text-gray-700">หัวข้อ *</label><input value={topic} onChange={e=>setTopic(e.target.value)} className="w-full p-2 border rounded-lg" /></div>
+                                    <div><label className="text-sm font-medium text-gray-700">วันที่ประชุม *</label><input type="date" value={meetingDate} onChange={e=>setMeetingDate(e.target.value)} className="w-full p-2 border rounded-lg" /></div>
                                 </div>
-                                
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ประชุม *</label>
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-2.5 text-gray-400"><Icon name="CalendarDays" className="w-5 h-5"/></div>
-                                        <input 
-                                            value={meetingDate}
-                                            onChange={(e) => setMeetingDate(e.target.value)}
-                                            type="date" 
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white" 
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="h-px bg-gray-200 my-4"></div>
-
-                                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                    2. เพิ่มผู้รับผิดชอบ/รายการ
-                                </h4>
+                                <hr className="my-4"/>
+                                <h4 className="font-bold text-gray-800 mb-4">2. รายการงาน</h4>
                                 <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs font-medium text-gray-600">ผู้รับผิดชอบ *</label>
-                                        <input 
-                                            name="assignee"
-                                            value={currentItem.assignee}
-                                            onChange={handleInputChange}
-                                            type="text" 
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none text-sm" 
-                                            placeholder="ชื่อผู้รับผิดชอบ" 
-                                        />
+                                    <input placeholder="ผู้รับผิดชอบ *" value={currentItem.assignee} onChange={e=>setCurrentItem({...currentItem, assignee: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input placeholder="Part No." value={currentItem.partNo} onChange={e=>setCurrentItem({...currentItem, partNo: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
+                                        <input placeholder="Part Name" value={currentItem.partName} onChange={e=>setCurrentItem({...currentItem, partName: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-xs font-medium text-gray-600">Part No.</label>
-                                            <input 
-                                                name="partNo"
-                                                value={currentItem.partNo}
-                                                onChange={handleInputChange}
-                                                type="text" 
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none text-sm" 
-                                                placeholder="P-001" 
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-medium text-gray-600">Part Name</label>
-                                            <input 
-                                                name="partName"
-                                                value={currentItem.partName}
-                                                onChange={handleInputChange}
-                                                type="text" 
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none text-sm" 
-                                                placeholder="Screw A" 
-                                            />
-                                        </div>
+                                        <div><label className="text-xs">เริ่ม</label><input type="date" value={currentItem.startDate} onChange={e=>setCurrentItem({...currentItem, startDate: e.target.value})} className="w-full p-2 border rounded-lg text-sm" /></div>
+                                        <div><label className="text-xs">จบ</label><input type="date" value={currentItem.dueDate} onChange={e=>setCurrentItem({...currentItem, dueDate: e.target.value})} className="w-full p-2 border rounded-lg text-sm" /></div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-xs font-medium text-gray-600">วันเริ่ม *</label>
-                                            <input 
-                                                name="startDate"
-                                                value={currentItem.startDate}
-                                                onChange={handleInputChange}
-                                                type="date" 
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none text-sm" 
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-medium text-gray-600">กำหนดเสร็จ *</label>
-                                            <input 
-                                                name="dueDate"
-                                                value={currentItem.dueDate}
-                                                onChange={handleInputChange}
-                                                type="date" 
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none text-sm" 
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-medium text-gray-600">รายละเอียด</label>
-                                        <textarea 
-                                            name="details"
-                                            value={currentItem.details}
-                                            onChange={handleInputChange}
-                                            rows="2" 
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none text-sm resize-none" 
-                                            placeholder="รายละเอียดเพิ่มเติม..."
-                                        ></textarea>
-                                    </div>
-                                    
-                                    <button 
-                                        onClick={handleAddItem}
-                                        className="w-full py-2.5 bg-gray-900 hover:bg-black text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all mt-2"
-                                    >
-                                        <Icon name="ListPlus" className="w-4 h-4" /> เพิ่มรายการนี้
-                                    </button>
+                                    <textarea placeholder="รายละเอียด" value={currentItem.details} onChange={e=>setCurrentItem({...currentItem, details: e.target.value})} rows="2" className="w-full p-2 border rounded-lg text-sm"></textarea>
+                                    <button onClick={handleAddItem} className="w-full py-2 bg-gray-800 text-white rounded-lg text-sm flex justify-center items-center gap-2"><Icon name="ListPlus" className="w-4 h-4"/> เพิ่มรายการนี้</button>
                                 </div>
                             </div>
-
-                            <div className="w-full md:w-7/12 p-0 flex flex-col bg-white">
-                                <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                                    <h4 className="font-semibold text-gray-700">รายการที่จะบันทึก ({pendingItems.length})</h4>
-                                    <span className="text-xs text-gray-500">ตรวจสอบความถูกต้องก่อนกดบันทึก</span>
-                                </div>
-                                
-                                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                                    {pendingItems.length === 0 ? (
-                                        <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-60">
-                                            <Icon name="ListPlus" className="w-16 h-16 mb-2" />
-                                            <p>ยังไม่มีรายการที่เพิ่ม</p>
-                                            <p className="text-sm">กรอกข้อมูลด้านซ้ายแล้วกด "เพิ่มรายการนี้"</p>
-                                        </div>
-                                    ) : (
-                                        pendingItems.map((item, idx) => (
-                                            <div key={item.tempId} className="flex gap-3 p-3 rounded-lg border border-gray-200 bg-white shadow-sm hover:border-blue-300 transition-all relative group">
-                                                <div className="bg-blue-50 text-blue-600 font-bold w-8 h-8 rounded-full flex items-center justify-center text-xs flex-shrink-0">
-                                                    {idx + 1}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="font-semibold text-gray-900 truncate">{item.assignee}</span>
-                                                        {(item.partNo || item.partName) && (
-                                                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600 truncate">
-                                                                {item.partNo} {item.partName}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-3 text-xs text-gray-500 mb-1">
-                                                        <span className="flex items-center gap-1">
-                                                            <Icon name="Calendar" className="w-3 h-3" /> 
-                                                            {item.startDate} - {item.dueDate}
-                                                        </span>
-                                                    </div>
-                                                    {item.details && <p className="text-xs text-gray-400 truncate">{item.details}</p>}
-                                                </div>
-                                                <button 
-                                                    onClick={() => handleRemoveItem(item.tempId)}
-                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors self-center"
-                                                >
-                                                    <Icon name="Trash2" className="w-4 h-4" />
-                                                </button>
+                            <div className="w-full md:w-7/12 flex flex-col bg-white">
+                                <div className="p-4 bg-gray-50 border-b flex justify-between"><h4 className="font-bold">รายการ ({pendingItems.length})</h4></div>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                    {pendingItems.map((item, idx) => (
+                                        <div key={item.tempId} className="flex gap-3 p-3 border rounded-lg bg-white shadow-sm">
+                                            <span className="font-bold text-blue-600 bg-blue-50 w-6 h-6 rounded-full flex items-center justify-center text-xs">{idx+1}</span>
+                                            <div className="flex-1 text-sm">
+                                                <div className="font-semibold">{item.assignee}</div>
+                                                <div className="text-xs text-gray-500">{item.partNo} {item.partName} | {item.dueDate}</div>
                                             </div>
-                                        ))
-                                    )}
+                                            <button onClick={()=>setPendingItems(prev=>prev.filter(i=>i.tempId!==item.tempId))} className="text-red-400"><Icon name="Trash2" className="w-4 h-4"/></button>
+                                        </div>
+                                    ))}
                                 </div>
-
-                                <div className="p-4 border-t border-gray-200 bg-white flex justify-end gap-3 flex-shrink-0">
-                                    <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">ยกเลิก</button>
-                                    <button 
-                                        onClick={handleSubmitAll}
-                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-md shadow-blue-200 transition-all flex items-center gap-2"
-                                    >
-                                        <Icon name="CheckCircle" className="w-4 h-4" /> บันทึกทั้งหมด ({pendingItems.length + (currentItem.assignee && currentItem.startDate ? 1 : 0)})
+                                <div className="p-4 border-t flex justify-end gap-2">
+                                    <button onClick={onClose} className="px-4 py-2 text-gray-600">ยกเลิก</button>
+                                    <button onClick={handleSubmitAll} disabled={isSaving} className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-lg flex items-center gap-2">
+                                        {isSaving ? 'กำลังบันทึก...' : <><Icon name="CheckCircle" className="w-4 h-4"/> บันทึกทั้งหมด</>}
                                     </button>
                                 </div>
                             </div>
@@ -390,325 +194,222 @@
         };
 
         // --- Main App ---
-
         function App() {
-            // Load from localStorage if available, else empty array
-            const [tasks, setTasks] = useState(() => {
-                const savedTasks = localStorage.getItem('meetingTasks');
-                if (savedTasks) {
-                    try {
-                        return JSON.parse(savedTasks);
-                    } catch (e) {
-                        return [];
-                    }
-                }
-                return [];
-            });
-
+            const [tasks, setTasks] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+            const [isSaving, setIsSaving] = useState(false);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [searchTerm, setSearchTerm] = useState('');
             const [filterStatus, setFilterStatus] = useState('all');
 
-            // Save to localStorage whenever tasks change
-            useEffect(() => {
-                localStorage.setItem('meetingTasks', JSON.stringify(tasks));
-            }, [tasks]);
-
-            const handleAddTasks = (newTasks) => {
-                if (Array.isArray(newTasks)) {
-                    setTasks(prev => [...newTasks, ...prev]);
-                } else {
-                    setTasks(prev => [newTasks, ...prev]);
+            // --- API Calls ---
+            const fetchTasks = async () => {
+                if (API_URL.includes("วาง_URL_ยาวๆ")) { 
+                    console.log("Waiting for API URL...");
+                    setIsLoading(false); 
+                    return; 
+                } 
+                
+                setIsLoading(true);
+                try {
+                    const res = await fetch(API_URL);
+                    const data = await res.json();
+                    if (Array.isArray(data)) setTasks(data.reverse()); // Show newest first
+                } catch (error) {
+                    console.error("Error fetching:", error);
+                    // Do not alert on first load to prevent annoyance if offline
+                } finally {
+                    setIsLoading(false);
                 }
             };
 
-            const handleDeleteTask = (id) => {
-                if (window.confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
-                    setTasks(prev => prev.filter(t => t.id !== id));
+            useEffect(() => { fetchTasks(); }, []);
+
+            const handleAddTasks = async (newTasks) => {
+                setIsSaving(true);
+                // Optimistic UI update (show immediately)
+                setTasks(prev => [...newTasks, ...prev]);
+
+                // Send to Google Sheet
+                try {
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Important for Google Script
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'create', tasks: newTasks })
+                    });
+                    // Refresh data to ensure sync (optional but safer)
+                    setTimeout(fetchTasks, 1000); 
+                } catch (error) {
+                    alert("บันทึกไม่สำเร็จ โปรดตรวจสอบอินเทอร์เน็ต");
+                } finally {
+                    setIsSaving(false);
                 }
             };
 
-            const handleToggleComplete = (id) => {
-                setTasks(prev => prev.map(task => {
-                    if (task.id === id) {
-                        if (task.status === 'completed') {
-                            if(window.confirm('ต้องการเปิดงานนี้อีกครั้งใช่หรือไม่?')) {
-                                return { ...task, status: 'active', completedAt: null };
-                            }
-                            return task;
-                        } else {
-                            return { ...task, status: 'completed', completedAt: new Date().toISOString() };
-                        }
-                    }
-                    return task;
-                }));
+            const handleDeleteTask = async (id) => {
+                if (!window.confirm('ยืนยันการลบ?')) return;
+                setTasks(prev => prev.filter(t => t.id !== id)); // Optimistic delete
+                
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', id: id })
+                });
             };
 
+            const handleToggleComplete = async (task) => {
+                const newStatus = task.status === 'completed' ? 'active' : 'completed';
+                const completedAt = newStatus === 'completed' ? new Date().toISOString() : '';
+                
+                // Optimistic update
+                setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus, completedAt } : t));
+
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'update', 
+                        id: task.id, 
+                        updates: { status: newStatus, completedAt: completedAt } 
+                    })
+                });
+            };
+
+            // --- Filtering & Stats ---
             const stats = useMemo(() => {
-                const now = new Date();
-                now.setHours(0, 0, 0, 0);
-
-                let normal = 0;
-                let nearDue = 0;
-                let overdue = 0;
-                let completed = 0;
-
-                tasks.forEach(task => {
-                    if (task.status === 'completed') {
-                        completed++;
-                        return;
-                    }
-
-                    const due = new Date(task.dueDate);
-                    due.setHours(0, 0, 0, 0);
-                    
-                    const diffTime = due - now;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    if (diffDays < 0) {
-                        overdue++;
-                    } else if (diffDays <= 3) {
-                        nearDue++;
-                    } else {
-                        normal++;
-                    }
+                const now = new Date(); now.setHours(0,0,0,0);
+                let c = { all: tasks.length, normal: 0, nearDue: 0, overdue: 0, completed: 0 };
+                tasks.forEach(t => {
+                    if (t.status === 'completed') { c.completed++; return; }
+                    const due = new Date(t.dueDate); due.setHours(0,0,0,0);
+                    const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+                    if (diffDays < 0) c.overdue++; else if (diffDays <= 3) c.nearDue++; else c.normal++;
                 });
-
-                return {
-                    all: tasks.length,
-                    normal,
-                    nearDue,
-                    overdue,
-                    completed
-                };
+                return c;
             }, [tasks]);
 
-            const getTaskStatusInfo = (task) => {
-                if (task.status === 'completed') {
-                    return { 
-                        bg: 'bg-green-50', 
-                        text: 'text-green-700', 
-                        border: 'border-green-200', 
-                        label: 'เสร็จสิ้น',
-                        desc: `จบงานเมื่อ ${new Date(task.completedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}`
-                    };
-                }
-
-                const now = new Date();
-                now.setHours(0,0,0,0);
-                const due = new Date(task.dueDate);
-                const diffTime = due - now;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays < 0) {
-                    return { 
-                        bg: 'bg-red-50', 
-                        text: 'text-red-700', 
-                        border: 'border-red-200', 
-                        label: 'เลยกำหนด',
-                        desc: `เลยมา ${Math.abs(diffDays)} วัน`
-                    };
-                }
-                if (diffDays === 0) {
-                return { 
-                        bg: 'bg-orange-50', 
-                        text: 'text-orange-700', 
-                        border: 'border-orange-200', 
-                        label: 'ครบกำหนดวันนี้',
-                        desc: 'ต้องส่งวันนี้'
-                    };
-                }
-                if (diffDays <= 3) {
-                    return { 
-                        bg: 'bg-yellow-50', 
-                        text: 'text-yellow-700', 
-                        border: 'border-yellow-200', 
-                        label: 'ใกล้กำหนด',
-                        desc: `เหลือ ${diffDays} วัน`
-                    };
-                }
-                return { 
-                    bg: 'bg-blue-50', 
-                    text: 'text-blue-700', 
-                    border: 'border-blue-200', 
-                    label: 'ปกติ',
-                    desc: `เหลือ ${diffDays} วัน`
-                };
-            };
-
-            const formatDate = (dateString) => {
-                if (!dateString) return '';
-                return new Date(dateString).toLocaleDateString('th-TH', { 
-                    day: 'numeric', 
-                    month: 'short',
-                    year: '2-digit'
-                });
-            };
-
-            const filteredTasks = tasks.filter(task => {
-                const matchesSearch = task.topic.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                    task.assignee.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    (task.partNo && task.partNo.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                                    (task.partName && task.partName.toLowerCase().includes(searchTerm.toLowerCase())); 
-                
-                if (filterStatus === 'all') return matchesSearch;
-                if (filterStatus === 'completed') return matchesSearch && task.status === 'completed';
-                if (filterStatus === 'active') return matchesSearch && task.status !== 'completed';
-                
-                return matchesSearch;
+            const filteredTasks = tasks.filter(t => {
+                const matches = (t.topic+t.assignee+t.partNo+t.partName).toLowerCase().includes(searchTerm.toLowerCase());
+                if (filterStatus === 'all') return matches;
+                if (filterStatus === 'completed') return matches && t.status === 'completed';
+                return matches && t.status !== 'completed';
             });
 
+            // Helper to determine row color
+            const getStatusInfo = (t) => {
+                if (t.status === 'completed') return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', label: 'เสร็จสิ้น' };
+                const due = new Date(t.dueDate); due.setHours(0,0,0,0);
+                const diff = Math.ceil((due - new Date().setHours(0,0,0,0)) / (86400000));
+                if (diff < 0) return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: `เลย ${Math.abs(diff)} วัน` };
+                if (diff <= 3) return { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', label: `เหลือ ${diff} วัน` };
+                return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'ปกติ' };
+            };
+
+            const formatDate = (d) => d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '';
+
+            // --- Render ---
             return (
-                <div className="min-h-screen bg-gray-50 font-sans text-gray-900 p-6 md:p-8">
-                    {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Meeting & Task Dashboard</h1>
-                            <p className="text-gray-500 mt-1">ระบบติดตามผลการประชุมและสถานะงาน (บันทึกข้อมูลในเครื่องนี้)</p>
+                <div className="min-h-screen bg-gray-50 font-sans text-gray-900 p-6 md:p-8 relative">
+                    {/* Loading Overlay */}
+                    {isLoading && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center loading-overlay">
+                            <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center">
+                                <Icon name="Loader" className="w-10 h-10 text-blue-600 animate-spin mb-3" />
+                                <p className="text-gray-500 font-medium">กำลังโหลดข้อมูล...</p>
+                            </div>
                         </div>
-                        <button 
-                            onClick={() => setIsModalOpen(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-blue-200 flex items-center gap-2 font-medium transition-all active:scale-95"
-                        >
-                            <Icon name="Plus" className="w-5 h-5" />
-                            บันทึกการประชุมใหม่
-                        </button>
+                    )}
+
+                    {/* API Warning */}
+                    {API_URL.includes("วาง_URL_ยาวๆ") && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center shadow-md animate-pulse">
+                            <p className="font-bold text-lg">⚠️ ยังไม่ได้เชื่อมต่อกับ Google Sheet!</p>
+                            <p>กรุณาเปิดไฟล์ index.html ด้วย Notepad แล้วนำ URL จาก Google Apps Script มาวางแทนที่บรรทัดที่ 37</p>
+                        </div>
+                    )}
+
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">Meeting Dashboard <span className="text-sm font-normal text-green-600 bg-green-100 px-2 py-1 rounded-full ml-2">Online</span></h1>
+                            <p className="text-gray-500 mt-1">ข้อมูลเชื่อมต่อกับ Google Sheets</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={fetchTasks} className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2">
+                                <Icon name="Refresh" className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} /> รีเฟรช
+                            </button>
+                            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 font-medium">
+                                <Icon name="Plus" className="w-5 h-5" /> บันทึกใหม่
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Stats Cards */}
+                    {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                        <StatCard title="งานทั้งหมด" count={stats.all} type="default" />
-                        <StatCard title="เสร็จสิ้น" count={stats.completed} type="green" iconName="CheckCircle" />
+                        <StatCard title="ทั้งหมด" count={stats.all} type="default" />
+                        <StatCard title="เสร็จแล้ว" count={stats.completed} type="green" iconName="CheckCircle" />
                         <StatCard title="ปกติ" count={stats.normal} type="blue" iconName="Clock" />
                         <StatCard title="ใกล้กำหนด" count={stats.nearDue} type="yellow" iconName="AlertTriangle" />
                         <StatCard title="เลยกำหนด" count={stats.overdue} type="red" iconName="AlertCircle" />
                     </div>
 
-                    {/* Filter Bar */}
-                    <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row gap-3 items-center">
-                        <div className="relative flex-1 w-full">
+                    {/* Filter */}
+                    <div className="bg-white p-2 rounded-xl border shadow-sm mb-6 flex flex-col md:flex-row gap-3">
+                        <div className="relative flex-1">
                             <div className="absolute left-3 top-2.5 text-gray-400"><Icon name="Search" className="w-5 h-5"/></div>
-                            <input 
-                                type="text" 
-                                placeholder="ค้นหา หัวข้อ, Part No/Name, ผู้รับผิดชอบ..." 
-                                className="w-full pl-10 pr-4 py-2 rounded-lg border-none focus:ring-0 text-gray-700 placeholder-gray-400 outline-none"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                            <input placeholder="ค้นหา..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-lg border-none outline-none" />
                         </div>
                         <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
-                        <div className="flex items-center gap-2 w-full md:w-auto px-2">
-                            <div className="text-gray-400"><Icon name="Filter" className="w-5 h-5"/></div>
-                            <select 
-                                className="bg-transparent border-none text-gray-700 font-medium focus:ring-0 cursor-pointer w-full md:w-auto outline-none"
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                            >
-                                <option value="all">📁 งานทั้งหมด (All)</option>
-                                <option value="active">⚡ งานที่ต้องทำ (Active)</option>
-                                <option value="completed">✅ งานที่เสร็จแล้ว (Completed)</option>
-                            </select>
-                        </div>
+                        <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="bg-transparent font-medium outline-none px-2">
+                            <option value="all">📁 ทั้งหมด</option>
+                            <option value="active">⚡ ต้องทำ</option>
+                            <option value="completed">✅ เสร็จแล้ว</option>
+                        </select>
                     </div>
 
-                    {/* Content Area */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 min-h-[400px] p-6 relative">
-                        
+                    {/* List */}
+                    <div className="bg-white rounded-2xl shadow-sm border min-h-[400px] p-6">
                         {filteredTasks.length === 0 ? (
-                            // Empty State
-                            <div className="absolute inset-0 border-2 border-dashed border-gray-200 rounded-xl m-4 flex flex-col items-center justify-center text-gray-400">
-                                <div className="bg-gray-50 p-4 rounded-full mb-4">
-                                    <Icon name="Inbox" className="w-12 h-12 text-gray-300" />
-                                </div>
-                                <p className="text-lg font-medium text-gray-400">ไม่พบรายการงาน</p>
-                                {searchTerm && <p className="text-sm mt-2">ลองเปลี่ยนคำค้นหาใหม่</p>}
+                            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                <Icon name="Inbox" className="w-12 h-12 mb-2 opacity-50" />
+                                <p>ไม่พบรายการงาน</p>
                             </div>
                         ) : (
-                            // Task List
-                            <div className="grid grid-cols-1 gap-4">
-                                {filteredTasks.map((task) => {
-                                    const statusInfo = getTaskStatusInfo(task);
+                            <div className="space-y-4">
+                                {filteredTasks.map(task => {
+                                    const s = getStatusInfo(task);
                                     return (
-                                        <div key={task.id} className={`group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border transition-all bg-white gap-4 ${task.status === 'completed' ? 'border-green-100 bg-green-50/30' : 'border-gray-100 hover:border-blue-200 hover:shadow-md'}`}>
-                                            <div className="flex items-start gap-4 flex-1">
-                                                {/* Checkbox / Status Icon */}
-                                                <button 
-                                                    onClick={() => handleToggleComplete(task.id)}
-                                                    className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
-                                                        task.status === 'completed' 
-                                                        ? 'bg-green-500 text-white shadow-green-200 shadow-md' 
-                                                        : 'bg-white border-2 border-gray-200 text-gray-300 hover:border-blue-400 hover:text-blue-400'
-                                                    }`}
-                                                    title={task.status === 'completed' ? 'เปิดงานอีกครั้ง' : 'กดเพื่อยืนยันว่าเสร็จสิ้น'}
-                                                >
+                                        <div key={task.id} className={`group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border hover:shadow-md transition-all ${task.status==='completed' ? 'bg-gray-50 opacity-75' : 'bg-white'}`}>
+                                            <div className="flex gap-4 flex-1">
+                                                <button onClick={()=>handleToggleComplete(task)} className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${task.status==='completed' ? 'bg-green-500 text-white' : 'border-2 text-gray-300 hover:border-blue-500'}`}>
                                                     <Icon name="Check" className="w-6 h-6" />
                                                 </button>
-
-                                                <div className={task.status === 'completed' ? 'opacity-60' : ''}>
-                                                    <h3 className={`font-semibold text-lg ${task.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                                                        {task.topic}
-                                                    </h3>
-                                                    <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
-                                                        <span className="flex items-center gap-1"><Icon name="User" className="w-3.5 h-3.5" /> {task.assignee}</span>
-                                                        {(task.partNo || task.partName) && (
-                                                            <span className="flex items-center gap-1">
-                                                                <Icon name="Tag" className="w-3.5 h-3.5" /> 
-                                                                {task.partNo} {task.partName && `(${task.partName})`}
-                                                            </span>
-                                                        )}
-                                                        
-                                                        {/* Meeting Date Display */}
-                                                        {task.meetingDate && (
-                                                            <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md" title="วันที่ประชุม">
-                                                                <Icon name="CalendarDays" className="w-3.5 h-3.5" /> 
-                                                                {formatDate(task.meetingDate)}
-                                                            </span>
-                                                        )}
-
-                                                        {/* Duration Display */}
-                                                        <span className="flex items-center gap-1 text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md" title="ระยะเวลาดำเนินการ">
-                                                            <Icon name="Clock" className="w-3.5 h-3.5" /> 
-                                                            {formatDate(task.startDate)} - {formatDate(task.dueDate)}
-                                                        </span>
+                                                <div>
+                                                    <h3 className={`font-bold text-lg ${task.status==='completed'?'line-through text-gray-500':''}`}>{task.topic}</h3>
+                                                    <div className="flex flex-wrap gap-3 mt-1 text-sm text-gray-500">
+                                                        <span className="flex items-center gap-1"><Icon name="User" className="w-4 h-4"/> {task.assignee}</span>
+                                                        {(task.partNo || task.partName) && <span className="flex items-center gap-1 bg-gray-100 px-2 rounded"><Icon name="Tag" className="w-4 h-4"/> {task.partNo} {task.partName}</span>}
+                                                        <span className="flex items-center gap-1 text-blue-600"><Icon name="CalendarDays" className="w-4 h-4"/> ประชุม: {formatDate(task.meetingDate)}</span>
+                                                        <span className="flex items-center gap-1"><Icon name="Clock" className="w-4 h-4"/> {formatDate(task.startDate)} - {formatDate(task.dueDate)}</span>
                                                     </div>
-                                                    {task.details && <p className="text-sm text-gray-400 mt-1 line-clamp-1">{task.details}</p>}
+                                                    {task.details && <p className="text-sm text-gray-400 mt-1">{task.details}</p>}
                                                 </div>
                                             </div>
-                                            
-                                            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto mt-2 md:mt-0 pt-2 md:pt-0 border-t md:border-t-0 border-gray-100">
-                                                <div className="flex flex-col items-end">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border} flex items-center gap-1`}>
-                                                        {task.status === 'completed' && <Icon name="CheckCircle" className="w-3 h-3" />}
-                                                        {statusInfo.label}
-                                                    </span>
-                                                    {/* Running Date Indicator */}
-                                                    <span className={`text-xs mt-1 font-medium ${task.status === 'completed' ? 'text-green-600' : 'text-gray-500'}`}>
-                                                        {statusInfo.desc}
-                                                    </span>
-                                                </div>
-
-                                                <button 
-                                                    onClick={() => handleDeleteTask(task.id)}
-                                                    className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                                    title="ลบรายการ"
-                                                >
-                                                    <Icon name="Trash2" className="w-5 h-5" />
-                                                </button>
+                                            <div className="flex items-center gap-4 mt-4 md:mt-0">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${s.bg} ${s.text} ${s.border}`}>{s.label}</span>
+                                                <button onClick={()=>handleDeleteTask(task.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icon name="Trash2" className="w-5 h-5"/></button>
                                             </div>
                                         </div>
-                                    );
+                                    )
                                 })}
                             </div>
                         )}
-
                     </div>
 
-                    {/* Modal Component */}
-                    <Modal 
-                        isOpen={isModalOpen} 
-                        onClose={() => setIsModalOpen(false)} 
-                        onSubmit={handleAddTasks}
-                    />
+                    <Modal isOpen={isModalOpen} onClose={()=>setIsModalOpen(false)} onSubmit={handleAddTasks} isSaving={isSaving} />
                 </div>
             );
         }
