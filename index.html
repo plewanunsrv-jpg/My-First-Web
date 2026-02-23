@@ -2,420 +2,564 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Task Dashboard (Google Sheets)</title>
-    
-    <!-- Load Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Forging Calculator Pro (3D Shapes Outline)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Load React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Load Babel -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
-        .loading-overlay {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(2px);
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-color: #f1f5f9; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* ลบลูกศรตัวเลขใน input */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .card-anim { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-anim:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        .btn-remove-mobile {
+            min-height: 44px;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
-    <div id="root"></div>
+<body class="min-h-screen py-6 px-4 pb-20 md:pb-6 flex justify-center text-slate-800">
 
-    <script type="text/babel">
-        // **************************************************************************
-        //    👇 ใส่ URL ของคุณให้เรียบร้อยแล้วครับ ใช้งานได้เลย 👇
-        // **************************************************************************
+    <div class="w-full max-w-4xl space-y-6">
         
-        const API_URL = "https://script.google.com/macros/s/AKfycbz0VehS_aSVDjdyPD1WgTMheA7Q0ny_ehq190eklxo0kYjPscHHas9f60_nqJmXj2jD/exec"; 
-        
-        // **************************************************************************
-
-
-        const { useState, useMemo, useEffect } = React;
-
-        // --- Icons ---
-        const Icon = ({ name, className }) => {
-            const icons = {
-                Plus: <path d="M12 5v14M5 12h14" />,
-                Clock: <path d="M12 6v6l4 2" />, 
-                AlertTriangle: <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01" />,
-                AlertCircle: <path d="M12 8v4M12 16h.01" />, 
-                Search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
-                Filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />,
-                Inbox: <path d="M22 12h-6l-2 3h-4l-2-3H2" />,
-                X: <path d="M18 6L6 18M6 6l12 12" />,
-                Calendar: <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />,
-                User: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />,
-                Tag: <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />,
-                CheckCircle: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />,
-                Check: <path d="M20 6L9 17l-5-5" />,
-                Trash2: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />,
-                ListPlus: <path d="M11 12H3M16 6H3M16 18H3M18 9v6M21 12h-6" />,
-                CalendarDays: <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />,
-                Refresh: <path d="M23 4v6h-6M1 20v-6h6" />, 
-                Loader: <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-            };
-            return (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {icons[name]}
-                    {/* Additional shapes for complex icons */}
-                    {name === 'Clock' && <circle cx="12" cy="12" r="10" />}
-                    {name === 'AlertCircle' && <circle cx="12" cy="12" r="10" />}
-                    {name === 'Calendar' && <><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>}
-                    {name === 'CalendarDays' && <><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></>}
-                    {name === 'User' && <circle cx="12" cy="7" r="4" />}
-                    {name === 'Tag' && <line x1="7" y1="7" x2="7.01" y2="7" />}
-                    {name === 'CheckCircle' && <polyline points="22 4 12 14.01 9 11.01" />}
-                    {name === 'Inbox' && <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />}
-                    {name === 'Refresh' && <><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" /></>}
-                </svg>
-            );
-        };
-
-        // --- Stats Component ---
-        const StatCard = ({ title, count, type, iconName }) => {
-            const styles = {
-                default: { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-900', iconColor: 'text-gray-400' },
-                blue: { bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-600', iconColor: 'text-blue-500' },
-                yellow: { bg: 'bg-yellow-50', border: 'border-yellow-100', text: 'text-yellow-700', iconColor: 'text-yellow-600' },
-                red: { bg: 'bg-red-50', border: 'border-red-100', text: 'text-red-600', iconColor: 'text-red-500' },
-                green: { bg: 'bg-green-50', border: 'border-green-100', text: 'text-green-600', iconColor: 'text-green-500' },
-            };
-            const style = styles[type] || styles.default;
-            return (
-                <div className={`${style.bg} border ${style.border} rounded-xl p-4 flex flex-col justify-between h-32 shadow-sm`}>
-                    <div className="flex justify-between items-start">
-                        <span className={`text-sm font-medium ${type === 'default' ? 'text-gray-500' : style.text}`}>{title}</span>
-                        {iconName && <Icon name={iconName} className={`w-5 h-5 ${style.iconColor}`} />}
-                    </div>
-                    <div className={`text-4xl font-bold ${style.text}`}>{count}</div>
+        <!-- ส่วนหัว (Header) -->
+        <div class="bg-slate-900 text-white p-5 rounded-2xl shadow-xl relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-10 -mt-10"></div>
+            
+            <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight flex items-center">
+                        <i class="fa-solid fa-shapes mr-3 text-blue-400"></i> 
+                        Forging Calc Pro
+                    </h1>
+                    <p class="text-slate-400 text-xs md:text-sm mt-1">คำนวณแยก เนื้อตัน (Solid) - รู (Hole) <span>[แบบต่อท่อน]</span></p>
                 </div>
-            );
-        };
+                
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <!-- Material Select -->
+                    <div class="w-full sm:w-48">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1 block">ชนิดวัสดุ (Material)</label>
+                        <select id="material" onchange="calculateTotal()" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            <option value="7.85">เหล็กกล้า (Steel) - 7.85</option>
+                            <option value="7.90">สแตนเลส (SS 304/316) - 7.90</option>
+                            <option value="7.20">เหล็กหล่อ (Cast Iron) - 7.20</option>
+                            <option value="2.70">อลูมิเนียม (Aluminum) - 2.70</option>
+                            <option value="8.50">ทองเหลือง (Brass) - 8.50</option>
+                            <option value="8.96">ทองแดง (Copper) - 8.96</option>
+                            <option value="4.51">ไทเทเนียม (Titanium) - 4.51</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // --- Modal Component ---
-        const Modal = ({ isOpen, onClose, onSubmit, isSaving }) => {
-            const [topic, setTopic] = useState('');
-            const [meetingDate, setMeetingDate] = useState(new Date().toISOString().split('T')[0]);
-            const [pendingItems, setPendingItems] = useState([]);
-            const [currentItem, setCurrentItem] = useState({ partNo: '', partName: '', assignee: '', startDate: '', dueDate: '', details: '' });
-
-            if (!isOpen) return null;
-
-            const handleAddItem = () => {
-                if (!currentItem.assignee || !currentItem.startDate || !currentItem.dueDate) {
-                    alert('กรุณากรอกข้อมูล ผู้รับผิดชอบ และวันที่ให้ครบถ้วน'); return;
-                }
-                setPendingItems(prev => [...prev, { ...currentItem, tempId: Date.now() }]);
-                setCurrentItem({ partNo: '', partName: '', assignee: '', startDate: currentItem.startDate, dueDate: currentItem.dueDate, details: '' });
-            };
-
-            const handleSubmitAll = () => {
-                if (!topic || !meetingDate) { alert('กรุณากรอกหัวข้อและวันที่ประชุม'); return; }
-                let finalItems = [...pendingItems];
-                if (currentItem.assignee && currentItem.startDate && currentItem.dueDate) {
-                    finalItems.push({ ...currentItem, tempId: Date.now() });
-                }
-                if (finalItems.length === 0) { alert('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ'); return; }
-
-                const tasks = finalItems.map((item, index) => ({
-                    id: Date.now() + index + Math.random(),
-                    topic, meetingDate, ...item,
-                    status: 'active', completedAt: '', createdAt: new Date().toISOString()
-                }));
-                onSubmit(tasks);
-                // Clear state
-                setTopic(''); setPendingItems([]); onClose();
-            };
-
-            return (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="bg-blue-600 px-6 py-4 flex justify-between items-center text-white">
-                            <h3 className="font-semibold text-lg flex items-center gap-2"><Icon name="Plus" className="w-5 h-5"/> บันทึกการประชุม</h3>
-                            <button onClick={onClose}><Icon name="X" className="w-6 h-6"/></button>
-                        </div>
-                        <div className="flex flex-col md:flex-row h-full overflow-hidden">
-                            <div className="w-full md:w-5/12 p-6 overflow-y-auto border-r border-gray-100 bg-gray-50/50">
-                                <h4 className="font-bold text-gray-800 mb-4">1. ข้อมูลการประชุม</h4>
-                                <div className="space-y-4">
-                                    <div><label className="text-sm font-medium text-gray-700">หัวข้อ *</label><input value={topic} onChange={e=>setTopic(e.target.value)} className="w-full p-2 border rounded-lg" /></div>
-                                    <div><label className="text-sm font-medium text-gray-700">วันที่ประชุม *</label><input type="date" value={meetingDate} onChange={e=>setMeetingDate(e.target.value)} className="w-full p-2 border rounded-lg" /></div>
-                                </div>
-                                <hr className="my-4"/>
-                                <h4 className="font-bold text-gray-800 mb-4">2. รายการงาน</h4>
-                                <div className="space-y-3">
-                                    <input placeholder="ผู้รับผิดชอบ *" value={currentItem.assignee} onChange={e=>setCurrentItem({...currentItem, assignee: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <input placeholder="Part No." value={currentItem.partNo} onChange={e=>setCurrentItem({...currentItem, partNo: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
-                                        <input placeholder="Part Name" value={currentItem.partName} onChange={e=>setCurrentItem({...currentItem, partName: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div><label className="text-xs">เริ่ม</label><input type="date" value={currentItem.startDate} onChange={e=>setCurrentItem({...currentItem, startDate: e.target.value})} className="w-full p-2 border rounded-lg text-sm" /></div>
-                                        <div><label className="text-xs">จบ</label><input type="date" value={currentItem.dueDate} onChange={e=>setCurrentItem({...currentItem, dueDate: e.target.value})} className="w-full p-2 border rounded-lg text-sm" /></div>
-                                    </div>
-                                    <textarea placeholder="รายละเอียด" value={currentItem.details} onChange={e=>setCurrentItem({...currentItem, details: e.target.value})} rows="2" className="w-full p-2 border rounded-lg text-sm"></textarea>
-                                    <button onClick={handleAddItem} className="w-full py-2 bg-gray-800 text-white rounded-lg text-sm flex justify-center items-center gap-2"><Icon name="ListPlus" className="w-4 h-4"/> เพิ่มรายการนี้</button>
-                                </div>
-                            </div>
-                            <div className="w-full md:w-7/12 flex flex-col bg-white">
-                                <div className="p-4 bg-gray-50 border-b flex justify-between"><h4 className="font-bold">รายการ ({pendingItems.length})</h4></div>
-                                <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                                    {pendingItems.map((item, idx) => (
-                                        <div key={item.tempId} className="flex gap-3 p-3 border rounded-lg bg-white shadow-sm">
-                                            <span className="font-bold text-blue-600 bg-blue-50 w-6 h-6 rounded-full flex items-center justify-center text-xs">{idx+1}</span>
-                                            <div className="flex-1 text-sm">
-                                                <div className="font-semibold">{item.assignee}</div>
-                                                <div className="text-xs text-gray-500">{item.partNo} {item.partName} | {item.dueDate}</div>
-                                            </div>
-                                            <button onClick={()=>setPendingItems(prev=>prev.filter(i=>i.tempId!==item.tempId))} className="text-red-400"><Icon name="Trash2" className="w-4 h-4"/></button>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="p-4 border-t flex justify-end gap-2">
-                                    <button onClick={onClose} className="px-4 py-2 text-gray-600">ยกเลิก</button>
-                                    <button onClick={handleSubmitAll} disabled={isSaving} className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-lg flex items-center gap-2">
-                                        {isSaving ? 'กำลังบันทึก...' : <><Icon name="CheckCircle" className="w-4 h-4"/> บันทึกทั้งหมด</>}
-                                    </button>
-                                </div>
-                            </div>
+        <!-- แถบผลลัพธ์ (Sticky Result Bar) -->
+        <div class="sticky top-2 z-40 bg-white/95 backdrop-blur-md border border-slate-200 p-3 rounded-xl shadow-lg ring-1 ring-black/5">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-3">
+                
+                <!-- Main Weight (KG & G) -->
+                <div class="flex items-center gap-3 w-full md:w-auto bg-blue-50/50 p-2 rounded-xl border border-blue-100 md:border-0 md:bg-transparent flex-grow">
+                    <div class="bg-blue-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 flex-shrink-0">
+                        <i class="fa-solid fa-weight-hanging text-xl"></i>
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">น้ำหนักสุทธิ (Net Weight)</div>
+                        <div class="flex items-baseline gap-2 flex-wrap">
+                            <span class="text-3xl font-bold text-slate-800 tracking-tight leading-none">
+                                <span id="total-kg">0.000</span> <span class="text-base font-medium text-slate-500">kg</span>
+                            </span>
+                            <span class="hidden sm:inline text-slate-300">|</span>
+                            <span class="text-lg font-semibold text-blue-600 leading-none">
+                                <span id="total-g">0.000</span> <span class="text-xs text-blue-400">g</span>
+                            </span>
                         </div>
                     </div>
                 </div>
-            );
-        };
 
-        // --- Main App ---
-        function App() {
-            const [tasks, setTasks] = useState([]);
-            const [isLoading, setIsLoading] = useState(true);
-            const [isSaving, setIsSaving] = useState(false);
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [searchTerm, setSearchTerm] = useState('');
-            const [filterStatus, setFilterStatus] = useState('all');
-
-            // --- API Calls ---
-            const fetchTasks = async () => {
-                if (API_URL.includes("วาง_URL_ยาวๆ")) { 
-                    console.log("Waiting for API URL...");
-                    setIsLoading(false); 
-                    return; 
-                } 
-                
-                setIsLoading(true);
-                try {
-                    const res = await fetch(API_URL);
-                    const data = await res.json();
-                    if (Array.isArray(data)) setTasks(data.reverse()); // Show newest first
-                } catch (error) {
-                    console.error("Error fetching:", error);
-                    // Do not alert on first load to prevent annoyance if offline
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-
-            useEffect(() => { fetchTasks(); }, []);
-
-            const handleAddTasks = async (newTasks) => {
-                setIsSaving(true);
-                // Optimistic UI update (show immediately)
-                setTasks(prev => [...newTasks, ...prev]);
-
-                // Send to Google Sheet
-                try {
-                    await fetch(API_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', // Important for Google Script
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'create', tasks: newTasks })
-                    });
-                    // Refresh data to ensure sync (optional but safer)
-                    setTimeout(fetchTasks, 1000); 
-                } catch (error) {
-                    alert("บันทึกไม่สำเร็จ โปรดตรวจสอบอินเทอร์เน็ต");
-                } finally {
-                    setIsSaving(false);
-                }
-            };
-
-            const handleDeleteTask = async (id) => {
-                if (!window.confirm('ยืนยันการลบ?')) return;
-                setTasks(prev => prev.filter(t => t.id !== id)); // Optimistic delete
-                
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'delete', id: id })
-                });
-            };
-
-            const handleToggleComplete = async (task) => {
-                const newStatus = task.status === 'completed' ? 'active' : 'completed';
-                const completedAt = newStatus === 'completed' ? new Date().toISOString() : '';
-                
-                // Optimistic update
-                setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus, completedAt } : t));
-
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: 'update', 
-                        id: task.id, 
-                        updates: { status: newStatus, completedAt: completedAt } 
-                    })
-                });
-            };
-
-            // --- Filtering & Stats ---
-            const stats = useMemo(() => {
-                const now = new Date(); now.setHours(0,0,0,0);
-                let c = { all: tasks.length, normal: 0, nearDue: 0, overdue: 0, completed: 0 };
-                tasks.forEach(t => {
-                    if (t.status === 'completed') { c.completed++; return; }
-                    const due = new Date(t.dueDate); due.setHours(0,0,0,0);
-                    const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
-                    if (diffDays < 0) c.overdue++; else if (diffDays <= 3) c.nearDue++; else c.normal++;
-                });
-                return c;
-            }, [tasks]);
-
-            const filteredTasks = tasks.filter(t => {
-                const matches = (t.topic+t.assignee+t.partNo+t.partName).toLowerCase().includes(searchTerm.toLowerCase());
-                if (filterStatus === 'all') return matches;
-                if (filterStatus === 'completed') return matches && t.status === 'completed';
-                return matches && t.status !== 'completed';
-            });
-
-            // Helper to determine row color
-            const getStatusInfo = (t) => {
-                if (t.status === 'completed') return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', label: 'เสร็จสิ้น' };
-                const due = new Date(t.dueDate); due.setHours(0,0,0,0);
-                const diff = Math.ceil((due - new Date().setHours(0,0,0,0)) / (86400000));
-                if (diff < 0) return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: `เลย ${Math.abs(diff)} วัน` };
-                if (diff <= 3) return { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', label: `เหลือ ${diff} วัน` };
-                return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'ปกติ' };
-            };
-
-            const formatDate = (d) => d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '';
-
-            // --- Render ---
-            return (
-                <div className="min-h-screen bg-gray-50 font-sans text-gray-900 p-6 md:p-8 relative">
-                    {/* Loading Overlay */}
-                    {isLoading && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center loading-overlay">
-                            <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center">
-                                <Icon name="Loader" className="w-10 h-10 text-blue-600 animate-spin mb-3" />
-                                <p className="text-gray-500 font-medium">กำลังโหลดข้อมูล...</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* API Warning */}
-                    {API_URL.includes("วาง_URL_ยาวๆ") && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center shadow-md animate-pulse">
-                            <p className="font-bold text-lg">⚠️ ยังไม่ได้เชื่อมต่อกับ Google Sheet!</p>
-                            <p>กรุณาเปิดไฟล์ index.html ด้วย Notepad แล้วนำ URL จาก Google Apps Script มาวางแทนที่บรรทัดที่ 37</p>
-                        </div>
-                    )}
-
-                    {/* Header */}
-                    <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Meeting Dashboard <span className="text-sm font-normal text-green-600 bg-green-100 px-2 py-1 rounded-full ml-2">Online</span></h1>
-                            <p className="text-gray-500 mt-1">ข้อมูลเชื่อมต่อกับ Google Sheets</p>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={fetchTasks} className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2">
-                                <Icon name="Refresh" className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} /> รีเฟรช
-                            </button>
-                            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 font-medium">
-                                <Icon name="Plus" className="w-5 h-5" /> บันทึกใหม่
-                            </button>
-                        </div>
+                <!-- Stats & Qty -->
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <!-- Pcs/Kg Box -->
+                    <div class="bg-green-50 p-2 rounded-lg border border-green-100 text-center min-w-[100px] flex-1 md:flex-none">
+                         <div class="text-[9px] text-green-600 uppercase font-bold">ชิ้น/กก. (Pcs/kg)</div>
+                         <div class="font-bold text-green-700 text-xl leading-tight"><span id="pcs-per-kg">0</span></div>
                     </div>
 
-                    {/* Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                        <StatCard title="ทั้งหมด" count={stats.all} type="default" />
-                        <StatCard title="เสร็จแล้ว" count={stats.completed} type="green" iconName="CheckCircle" />
-                        <StatCard title="ปกติ" count={stats.normal} type="blue" iconName="Clock" />
-                        <StatCard title="ใกล้กำหนด" count={stats.nearDue} type="yellow" iconName="AlertTriangle" />
-                        <StatCard title="เลยกำหนด" count={stats.overdue} type="red" iconName="AlertCircle" />
+                    <!-- Qty Box -->
+                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 text-center min-w-[80px] flex-1 md:flex-none">
+                        <div class="text-[9px] text-slate-500 uppercase font-bold">จำนวน (Qty)</div>
+                        <input type="number" id="qty" value="1" min="1" class="w-full text-center font-bold text-slate-800 bg-transparent outline-none p-0 text-xl leading-tight" oninput="calculateTotal()">
                     </div>
+                </div>
+            </div>
 
-                    {/* Filter */}
-                    <div className="bg-white p-2 rounded-xl border shadow-sm mb-6 flex flex-col md:flex-row gap-3">
-                        <div className="relative flex-1">
-                            <div className="absolute left-3 top-2.5 text-gray-400"><Icon name="Search" className="w-5 h-5"/></div>
-                            <input placeholder="ค้นหา..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-lg border-none outline-none" />
-                        </div>
-                        <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
-                        <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="bg-transparent font-medium outline-none px-2">
-                            <option value="all">📁 ทั้งหมด</option>
-                            <option value="active">⚡ ต้องทำ</option>
-                            <option value="completed">✅ เสร็จแล้ว</option>
+            <!-- Action Buttons (Moved here) -->
+            <div class="mt-3 pt-3 border-t border-slate-100 flex justify-start gap-2">
+                <button onclick="resetCalculator()" class="flex-1 sm:flex-none h-10 text-xs font-medium flex items-center justify-center gap-2 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 px-4 rounded-lg transition-colors border border-slate-300 hover:border-red-300 shadow-sm active:bg-red-100" title="ล้างค่าทั้งหมดและเริ่มใหม่">
+                    <i class="fa-solid fa-rotate-right"></i> เริ่มใหม่
+                </button>
+            </div>
+            
+            <!-- Error Message -->
+            <div id="error-msg" class="hidden mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg text-center font-medium border border-red-100 animate-pulse">
+                <i class="fa-solid fa-circle-exclamation mr-1"></i> น้ำหนักรูมากกว่าน้ำหนักเนื้อตัน (Weight is negative)
+            </div>
+        </div>
+
+        <!-- ปรับเปลี่ยนจาก lg:grid-cols-2 เป็น md:grid-cols-2 เพื่อให้บังคับซ้าย-ขวาในหน้าจอที่เล็กลง -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            
+            <!-- SECTION 1: SOLID BODY -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center px-2">
+                    <h2 class="font-bold text-slate-700 flex items-center gap-2 text-sm md:text-base">
+                        <span class="bg-slate-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm">1</span>
+                        รูปทรงภายนอก (Solid Body)
+                    </h2>
+                </div>
+                
+                <div id="solid-container" class="space-y-3">
+                    <!-- Solids injected here -->
+                </div>
+
+                <button onclick="addSolid()" class="w-full py-3 md:py-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all text-sm font-bold flex items-center justify-center gap-2 active:scale-[0.99]">
+                    <i class="fa-solid fa-plus"></i> เพิ่มท่อนเนื้อตัน (Add Solid)
+                </button>
+            </div>
+
+            <!-- SECTION 2: HOLES -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center px-2">
+                    <h2 class="font-bold text-red-700 flex items-center gap-2 text-sm md:text-base">
+                        <span class="bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm">2</span>
+                        รู (Internal Holes)
+                    </h2>
+                </div>
+
+                <div id="hole-container" class="space-y-3">
+                    <!-- Holes injected here -->
+                </div>
+
+                <button onclick="addHole()" class="w-full py-3 md:py-4 border-2 border-dashed border-red-200 rounded-xl text-red-400 hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all text-sm font-bold flex items-center justify-center gap-2 active:scale-[0.99]">
+                    <i class="fa-solid fa-eraser"></i> เพิ่มรู (Add Hole)
+                </button>
+            </div>
+
+        </div>
+        
+    </div>
+
+    <!-- TEMPLATE: SOLID -->
+    <template id="solid-template">
+        <div class="solid-card card-anim bg-white p-4 rounded-xl shadow-sm border border-slate-200 relative group">
+            <div class="flex gap-3 items-start">
+                <!-- Shape 3D Icon Box (Outline Only) -->
+                <div class="w-14 h-14 flex-shrink-0 flex items-center justify-center text-blue-600 bg-blue-50/50 rounded-lg border border-blue-100 p-2 icon-container">
+                    <!-- SVG Graphic will be injected here -->
+                </div>
+                
+                <!-- Inputs Grid -->
+                <div class="flex-1 grid grid-cols-12 gap-2">
+                    <!-- Shape Select -->
+                    <div class="col-span-12 sm:col-span-4">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Shape</label>
+                        <select class="inp-shape w-full h-9 px-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none" onchange="handleShapeChange(this)">
+                            <option value="round">กลม (Round)</option>
+                            <option value="square">สี่เหลี่ยม (Sq)</option>
+                            <option value="rect">ผืนผ้า (Rect)</option>
+                            <option value="hex">หกเหลี่ยม (Hex)</option>
+                            <option value="triangle">สามเหลี่ยม (Triangle)</option>
+                            <option value="oval">วงรี (Oval)</option>
+                            <option value="semicircle">ครึ่งวงกลม (Semi-Circle)</option>
                         </select>
                     </div>
 
-                    {/* List */}
-                    <div className="bg-white rounded-2xl shadow-sm border min-h-[400px] p-6">
-                        {filteredTasks.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                                <Icon name="Inbox" className="w-12 h-12 mb-2 opacity-50" />
-                                <p>ไม่พบรายการงาน</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {filteredTasks.map(task => {
-                                    const s = getStatusInfo(task);
-                                    return (
-                                        <div key={task.id} className={`group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border hover:shadow-md transition-all ${task.status==='completed' ? 'bg-gray-50 opacity-75' : 'bg-white'}`}>
-                                            <div className="flex gap-4 flex-1">
-                                                <button onClick={()=>handleToggleComplete(task)} className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${task.status==='completed' ? 'bg-green-500 text-white' : 'border-2 text-gray-300 hover:border-blue-500'}`}>
-                                                    <Icon name="Check" className="w-6 h-6" />
-                                                </button>
-                                                <div>
-                                                    <h3 className={`font-bold text-lg ${task.status==='completed'?'line-through text-gray-500':''}`}>{task.topic}</h3>
-                                                    <div className="flex flex-wrap gap-3 mt-1 text-sm text-gray-500">
-                                                        <span className="flex items-center gap-1"><Icon name="User" className="w-4 h-4"/> {task.assignee}</span>
-                                                        {(task.partNo || task.partName) && <span className="flex items-center gap-1 bg-gray-100 px-2 rounded"><Icon name="Tag" className="w-4 h-4"/> {task.partNo} {task.partName}</span>}
-                                                        <span className="flex items-center gap-1 text-blue-600"><Icon name="CalendarDays" className="w-4 h-4"/> ประชุม: {formatDate(task.meetingDate)}</span>
-                                                        <span className="flex items-center gap-1"><Icon name="Clock" className="w-4 h-4"/> {formatDate(task.startDate)} - {formatDate(task.dueDate)}</span>
-                                                    </div>
-                                                    {task.details && <p className="text-sm text-gray-400 mt-1">{task.details}</p>}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4 mt-4 md:mt-0">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${s.bg} ${s.text} ${s.border}`}>{s.label}</span>
-                                                <button onClick={()=>handleDeleteTask(task.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Icon name="Trash2" className="w-5 h-5"/></button>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
+                    <!-- Dim 1 -->
+                    <div class="col-span-6 sm:col-span-4">
+                        <label class="lbl-dim-1 text-[9px] font-bold text-slate-400 uppercase block mb-1">OD (mm)</label>
+                        <input type="number" placeholder="mm" class="inp-d1 w-full h-9 px-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" oninput="calculateTotal()">
                     </div>
 
-                    <Modal isOpen={isModalOpen} onClose={()=>setIsModalOpen(false)} onSubmit={handleAddTasks} isSaving={isSaving} />
+                    <!-- Length -->
+                    <div class="col-span-6 sm:col-span-4">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Length (mm)</label>
+                        <input type="number" placeholder="mm" class="inp-l w-full h-9 px-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" oninput="calculateTotal()">
+                    </div>
+                    
+                    <!-- Dim 2 (Hidden by default) -->
+                    <div class="div-dim-2 col-span-12 hidden mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <div class="flex items-center gap-2">
+                             <label class="text-[10px] font-bold text-slate-500 uppercase whitespace-nowrap">Thickness (mm):</label>
+                             <input type="number" placeholder="ความหนา/สูง" class="inp-d2 w-full h-8 px-2 border border-slate-200 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none" oninput="calculateTotal()">
+                        </div>
+                    </div>
                 </div>
-            );
+
+                <!-- Delete Btn -->
+                <button class="btn-remove btn-remove-mobile text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors -mr-2 -mt-2">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+            
+            <!-- Subweight -->
+            <div class="text-right mt-2 pt-2 border-t border-slate-50 flex justify-end items-center gap-2">
+                <span class="text-[10px] text-slate-400 uppercase">Weight:</span>
+                <span class="span-weight text-sm font-bold text-slate-700">0.00</span>
+                <span class="text-[10px] text-slate-400">kg</span>
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: HOLE -->
+    <template id="hole-template">
+        <div class="hole-card card-anim bg-red-50/40 p-4 rounded-xl shadow-sm border border-red-100 relative group">
+            <div class="flex gap-3 items-start">
+                <!-- 3D Icon Box (Outline Only) -->
+                <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center text-red-500 bg-white rounded-lg border border-red-200 p-2 icon-container">
+                    <!-- SVG Graphic will be injected here -->
+                </div>
+                
+                <!-- Inputs -->
+                <div class="flex-1 grid grid-cols-12 gap-2">
+                    <!-- Shape Select -->
+                    <div class="col-span-12 sm:col-span-4">
+                        <label class="text-[9px] font-bold text-red-400 uppercase block mb-1">Hole Shape</label>
+                        <select class="inp-shape w-full h-9 px-2 bg-white border border-red-200 rounded-lg text-xs font-medium text-red-700 focus:ring-2 focus:ring-red-500 outline-none" onchange="handleHoleShapeChange(this)">
+                            <option value="round">รูดริล (Round)</option>
+                            <option value="tap">ต๊าปเกลียว (Tap)</option>
+                            <option value="square">รูเหลี่ยม (Sq)</option>
+                            <option value="rect">รูผืนผ้า (Rect)</option>
+                            <option value="hex">รูหกเหลี่ยม (Hex)</option>
+                            <option value="triangle">รูสามเหลี่ยม (Triangle)</option>
+                            <option value="oval">รูวงรี (Oval)</option>
+                            <option value="semicircle">รูครึ่งวงกลม (Semi-Circle)</option>
+                        </select>
+                    </div>
+
+                    <!-- Dim 1 -->
+                    <div class="div-dim-1 col-span-6 sm:col-span-4">
+                        <label class="lbl-dim-1 text-[9px] font-bold text-red-400 uppercase block mb-1">ID (mm)</label>
+                        <input type="number" placeholder="Size" class="inp-d1 w-full h-9 px-2 bg-white border border-red-200 rounded-lg text-sm text-red-700 focus:ring-2 focus:ring-red-500 outline-none" oninput="calculateTotal()">
+                    </div>
+
+                    <!-- Dim Tap (Hidden by default) -->
+                    <div class="div-dim-tap col-span-6 sm:col-span-4 hidden">
+                        <label class="text-[9px] font-bold text-red-400 uppercase block mb-1">ขนาดเกลียว (Size)</label>
+                        <select class="inp-tap w-full h-9 px-2 bg-white border border-red-200 rounded-lg text-sm text-red-700 focus:ring-2 focus:ring-red-500 outline-none" onchange="calculateTotal()">
+                            <optgroup label="Metric Coarse (M)">
+                                <option value="2.5">M3 x 0.5</option>
+                                <option value="3.3">M4 x 0.7</option>
+                                <option value="4.2">M5 x 0.8</option>
+                                <option value="5.0">M6 x 1.0</option>
+                                <option value="6.8">M8 x 1.25</option>
+                                <option value="8.5">M10 x 1.5</option>
+                                <option value="10.2">M12 x 1.75</option>
+                                <option value="12.0">M14 x 2.0</option>
+                                <option value="14.0">M16 x 2.0</option>
+                                <option value="15.5">M18 x 2.5</option>
+                                <option value="17.5">M20 x 2.5</option>
+                                <option value="19.5">M22 x 2.5</option>
+                                <option value="21.0">M24 x 3.0</option>
+                                <option value="26.5">M30 x 3.5</option>
+                            </optgroup>
+                            <optgroup label="Inch (UNC)">
+                                <option value="5.1">1/4" - 20</option>
+                                <option value="6.5">5/16" - 18</option>
+                                <option value="8.0">3/8" - 16</option>
+                                <option value="10.8">1/2" - 13</option>
+                                <option value="13.5">5/8" - 11</option>
+                                <option value="16.5">3/4" - 10</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Length -->
+                    <div class="col-span-6 sm:col-span-4">
+                        <label class="text-[9px] font-bold text-red-400 uppercase block mb-1">Depth (mm)</label>
+                        <input type="number" placeholder="Depth" class="inp-l w-full h-9 px-2 bg-white border border-red-200 rounded-lg text-sm text-red-700 focus:ring-2 focus:ring-red-500 outline-none" oninput="calculateTotal()">
+                    </div>
+                    
+                    <!-- Dim 2 (Hidden by default) -->
+                    <div class="div-dim-2 col-span-12 hidden mt-1 bg-red-50/50 p-2 rounded-lg border border-red-100">
+                        <div class="flex items-center gap-2">
+                             <label class="text-[10px] font-bold text-red-500 uppercase whitespace-nowrap">Minor (mm):</label>
+                             <input type="number" placeholder="แกนสั้น/สูง" class="inp-d2 w-full h-8 px-2 bg-white border border-red-200 rounded text-sm text-red-700 focus:ring-2 focus:ring-red-500 outline-none" oninput="calculateTotal()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Btn -->
+                <button class="btn-remove btn-remove-mobile text-red-200 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors -mr-2 -mt-2">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+             <!-- Subweight -->
+             <div class="text-right mt-2 pt-2 border-t border-red-100 flex justify-end items-center gap-2">
+                <span class="text-[10px] text-red-300 uppercase">Remove:</span>
+                <span class="text-sm font-bold text-red-500">-<span class="span-weight">0.00</span></span>
+                <span class="text-[10px] text-red-300">kg</span>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // --- 3D SVG SHAPE GRAPHICS (OUTLINE ONLY FOR BOTH) ---
+        const svgShapes = {
+            round: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7 v10 a7 3 0 0 0 14 0 v-10"/></svg>`,
+            square: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12,4 19,7.5 12,11 5,7.5"/><path d="M5 7.5 v9 l7 3.5 l7 -3.5 v-9"/><path d="M12 11 v9"/></svg>`,
+            rect: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12,6 21,9 12,12 3,9"/><path d="M3 9 v6 l9 3 l9 -3 v-6"/><path d="M12 12 v6"/></svg>`,
+            hex: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12,3 17.5,5.5 17.5,9.5 12,12 6.5,9.5 6.5,5.5"/><path d="M6.5 9.5 v7.5 l5.5 2.5 l5.5 -2.5 v-7.5"/><path d="M12 12 v7.5"/></svg>`,
+            triangle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="10,6 16,18 4,18"/><polygon points="10,6 16,3 22,15 16,18"/></svg>`,
+            oval: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><ellipse cx="12" cy="8" rx="8" ry="3"/><path d="M4 8 v8 a8 3 0 0 0 16 0 v-8"/></svg>`,
+            semicircle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 9 a 8 3 0 0 1 16 0 z"/><path d="M4 9 v8"/><path d="M20 9 v8"/><path d="M4 17 a 8 3 0 0 0 16 0"/><line x1="4" y1="17" x2="20" y2="17"/></svg>`,
+            tap: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 3 a9 9 0 1 1 -6.36 2.64" stroke-dasharray="3 3"/></svg>`
+        };
+
+        const solidContainer = document.getElementById('solid-container');
+        const holeContainer = document.getElementById('hole-container');
+        const solidTemplate = document.getElementById('solid-template');
+        const holeTemplate = document.getElementById('hole-template');
+
+        window.onload = () => {
+            addSolid(); // เริ่มต้นด้วย 1 ท่อนเนื้อตัน
+        };
+
+        // --- SOLID LOGIC ---
+        function addSolid() {
+            const clone = solidTemplate.content.cloneNode(true);
+            const card = clone.querySelector('.solid-card');
+            
+            card.querySelector('.btn-remove').onclick = () => {
+                if(solidContainer.children.length > 1) {
+                    card.remove();
+                    calculateTotal();
+                } else {
+                    alert("ต้องมีอย่างน้อย 1 ส่วนครับ");
+                }
+            };
+            solidContainer.appendChild(clone);
+            handleShapeChange(card.querySelector('.inp-shape'));
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        function handleShapeChange(select) {
+            const card = select.closest('.solid-card');
+            const shape = select.value;
+            const lbl1 = card.querySelector('.lbl-dim-1');
+            const div2 = card.querySelector('.div-dim-2');
+            const iconContainer = card.querySelector('.icon-container');
+
+            div2.classList.add('hidden');
+            
+            // แทรกรูปภาพวาด SVG ลายเส้นลงไป
+            iconContainer.innerHTML = svgShapes[shape];
+            iconContainer.querySelector('svg').classList.add('w-full', 'h-full', 'drop-shadow-sm', 'transition-all', 'duration-300');
+
+            if(shape === 'round') {
+                lbl1.innerText = "Diameter (OD)";
+            } else if (shape === 'square') {
+                lbl1.innerText = "Width (กว้าง)";
+            } else if (shape === 'rect') {
+                lbl1.innerText = "Width (กว้าง)";
+                card.querySelector('.div-dim-2 label').innerText = "Thickness (หนา):";
+                div2.classList.remove('hidden');
+            } else if (shape === 'hex') {
+                lbl1.innerText = "Width (ขอบขนาน)";
+            } else if (shape === 'triangle') {
+                lbl1.innerText = "Base (ฐาน)";
+                card.querySelector('.div-dim-2 label').innerText = "Height (สูง):";
+                div2.classList.remove('hidden');
+            } else if (shape === 'oval') {
+                lbl1.innerText = "Major (ยาว)";
+                card.querySelector('.div-dim-2 label').innerText = "Minor (กว้าง):";
+                div2.classList.remove('hidden');
+            } else if (shape === 'semicircle') {
+                lbl1.innerText = "Diameter (OD)";
+            }
+            
+            calculateTotal();
+        }
+
+        // --- HOLE LOGIC ---
+        function addHole() {
+            const clone = holeTemplate.content.cloneNode(true);
+            const card = clone.querySelector('.hole-card');
+            
+            card.querySelector('.btn-remove').onclick = () => {
+                card.remove();
+                calculateTotal();
+            };
+            holeContainer.appendChild(clone);
+            handleHoleShapeChange(card.querySelector('.inp-shape'));
+        }
+
+        function handleHoleShapeChange(select) {
+            const card = select.closest('.hole-card');
+            const shape = select.value;
+            const lbl1 = card.querySelector('.lbl-dim-1');
+            const div1 = card.querySelector('.div-dim-1');
+            const divTap = card.querySelector('.div-dim-tap');
+            const div2 = card.querySelector('.div-dim-2');
+            const iconContainer = card.querySelector('.icon-container');
+            
+            if(div2) div2.classList.add('hidden');
+            if(div1) div1.classList.remove('hidden');
+            if(divTap) divTap.classList.add('hidden');
+            
+            // แทรกรูปภาพวาด SVG ลายเส้นรูกลวงลงไป
+            iconContainer.innerHTML = svgShapes[shape];
+            iconContainer.querySelector('svg').classList.add('w-full', 'h-full', 'drop-shadow-sm', 'transition-all', 'duration-300');
+
+            if(shape === 'round') {
+                lbl1.innerText = "Diameter (ID)";
+            } else if (shape === 'tap') {
+                if(div1) div1.classList.add('hidden');
+                if(divTap) divTap.classList.remove('hidden');
+            } else if (shape === 'square') {
+                lbl1.innerText = "Width (กว้าง)";
+            } else if (shape === 'rect') {
+                lbl1.innerText = "Width (กว้าง)";
+                if(div2) {
+                    div2.classList.remove('hidden');
+                    card.querySelector('.div-dim-2 label').innerText = "Thickness (หนา):";
+                }
+            } else if (shape === 'hex') {
+                lbl1.innerText = "Width (ขอบขนาน)";
+            } else if (shape === 'triangle') {
+                lbl1.innerText = "Base (ฐาน)";
+                if(div2) {
+                    div2.classList.remove('hidden');
+                    card.querySelector('.div-dim-2 label').innerText = "Height (สูง):";
+                }
+            } else if (shape === 'oval') {
+                lbl1.innerText = "Major (ยาว)";
+                if(div2) {
+                    div2.classList.remove('hidden');
+                    card.querySelector('.div-dim-2 label').innerText = "Minor (กว้าง):";
+                }
+            } else if (shape === 'semicircle') {
+                lbl1.innerText = "Diameter (ID)";
+            }
+
+            calculateTotal();
+        }
+
+        // --- CALCULATION ---
+        function calculateTotal() {
+            const density = parseFloat(document.getElementById('material').value);
+            const qty = parseFloat(document.getElementById('qty').value) || 1;
+
+            // 1. Calc Solids
+            let totalSolidKg = 0;
+            solidContainer.querySelectorAll('.solid-card').forEach(card => {
+                const shape = card.querySelector('.inp-shape').value;
+                const d1 = parseFloat(card.querySelector('.inp-d1').value) || 0;
+                const d2 = parseFloat(card.querySelector('.inp-d2').value) || 0;
+                const l = parseFloat(card.querySelector('.inp-l').value) || 0;
+                
+                // cm conversion
+                const cm_d1 = d1/10; const cm_d2 = d2/10; const cm_l = l/10;
+                
+                let area = 0;
+                if(shape === 'round') area = Math.PI * Math.pow(cm_d1/2, 2);
+                else if(shape === 'square') area = cm_d1 * cm_d1;
+                else if(shape === 'rect') area = cm_d1 * cm_d2;
+                else if(shape === 'hex') area = 0.866025 * cm_d1 * cm_d1;
+                else if(shape === 'triangle') area = 0.5 * cm_d1 * cm_d2;
+                else if(shape === 'oval') area = Math.PI * (cm_d1/2) * (cm_d2/2);
+                else if(shape === 'semicircle') area = (Math.PI * Math.pow(cm_d1/2, 2)) / 2;
+
+                const vol = area * cm_l;
+                const weight = (vol * density) / 1000;
+                
+                card.querySelector('.span-weight').innerText = weight.toFixed(3);
+                totalSolidKg += weight;
+            });
+
+            // 2. Calc Holes
+            let totalHoleKg = 0;
+            holeContainer.querySelectorAll('.hole-card').forEach(card => {
+                const shape = card.querySelector('.inp-shape').value;
+                let d1 = 0;
+                
+                if (shape === 'tap') {
+                    d1 = parseFloat(card.querySelector('.inp-tap').value) || 0; // ดึงค่าขนาดรูเจาะนำต๊าป
+                } else {
+                    d1 = parseFloat(card.querySelector('.inp-d1').value) || 0;
+                }
+                
+                const d2 = parseFloat(card.querySelector('.inp-d2') ? card.querySelector('.inp-d2').value : 0) || 0;
+                const l = parseFloat(card.querySelector('.inp-l').value) || 0;
+
+                const cm_d1 = d1/10; const cm_d2 = d2/10; const cm_l = l/10;
+                
+                let area = 0;
+                if(shape === 'round' || shape === 'tap') area = Math.PI * Math.pow(cm_d1/2, 2); // คำนวณต๊าปเหมือนรูกลมปกติ
+                else if(shape === 'square') area = cm_d1 * cm_d1;
+                else if(shape === 'rect') area = cm_d1 * cm_d2;
+                else if(shape === 'hex') area = 0.866025 * cm_d1 * cm_d1; 
+                else if(shape === 'triangle') area = 0.5 * cm_d1 * cm_d2;
+                else if(shape === 'oval') area = Math.PI * (cm_d1/2) * (cm_d2/2);
+                else if(shape === 'semicircle') area = (Math.PI * Math.pow(cm_d1/2, 2)) / 2;
+
+                const vol = area * cm_l;
+                const weight = (vol * density) / 1000;
+                
+                card.querySelector('.span-weight').innerText = weight.toFixed(3);
+                totalHoleKg += weight;
+            });
+
+            // 3. Net Result (Per Piece)
+            let netWeightPerPiece = totalSolidKg - totalHoleKg;
+            
+            // Validation
+            const errorMsg = document.getElementById('error-msg');
+            if (netWeightPerPiece < 0) {
+                errorMsg.classList.remove('hidden');
+                netWeightPerPiece = 0;
+            } else {
+                errorMsg.classList.add('hidden');
+            }
+
+            // Calculations
+            const totalNetWeightKg = netWeightPerPiece * qty;
+            const totalNetWeightG = totalNetWeightKg * 1000; // Total G
+            const pcsPerKg = netWeightPerPiece > 0 ? (1/netWeightPerPiece) : 0;
+
+            // UI Update
+            document.getElementById('total-kg').innerText = totalNetWeightKg.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 6 });
+            document.getElementById('total-g').innerText = totalNetWeightG.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+            
+            document.getElementById('pcs-per-kg').innerText = pcsPerKg.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function resetCalculator() {
+            // 1. คืนค่าวัสดุเป็นค่าเริ่มต้น (เหล็ก)
+            document.getElementById('material').value = "7.85";
+            
+            // 2. คืนค่าจำนวนชิ้นงาน
+            document.getElementById('qty').value = "1";
+            
+            // 3. ลบท่อนเนื้อตันและรูออกทั้งหมด
+            document.getElementById('solid-container').innerHTML = '';
+            document.getElementById('hole-container').innerHTML = '';
+            
+            // 4. ซ่อนข้อความแจ้งเตือน
+            document.getElementById('error-msg').classList.add('hidden');
+            
+            // 5. สร้างท่อนเนื้อตันเริ่มต้น 1 ท่อน (จะทำการคำนวณใหม่เป็น 0 ให้อัตโนมัติ)
+            addSolid();
+        }
     </script>
 </body>
 </html>
