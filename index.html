@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Forging Calculator Pro (3D Shapes Outline)</title>
+    <title>Forging Calculator Pro</title>
+    <!-- โหลด CSS Framework และ Icon จาก CDN เพื่อให้ใช้งานบน GitHub Pages ได้สมบูรณ์ -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,7 +14,6 @@
             background-color: #f1f5f9; 
             -webkit-tap-highlight-color: transparent;
         }
-        /* ลบลูกศรตัวเลขใน input */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
@@ -35,7 +35,6 @@
         
         <!-- ส่วนหัว (Header) -->
         <div class="bg-slate-900 text-white p-5 rounded-2xl shadow-xl relative overflow-hidden">
-            <!-- Background Decoration -->
             <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-10 -mt-10"></div>
             
             <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -104,7 +103,7 @@
                 </div>
             </div>
 
-            <!-- Action Buttons (Moved here) -->
+            <!-- Action Buttons -->
             <div class="mt-3 pt-3 border-t border-slate-100 flex justify-start gap-2">
                 <button onclick="resetCalculator()" class="flex-1 sm:flex-none h-10 text-xs font-medium flex items-center justify-center gap-2 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 px-4 rounded-lg transition-colors border border-slate-300 hover:border-red-300 shadow-sm active:bg-red-100" title="ล้างค่าทั้งหมดและเริ่มใหม่">
                     <i class="fa-solid fa-rotate-right"></i> เริ่มใหม่
@@ -117,7 +116,6 @@
             </div>
         </div>
 
-        <!-- ปรับเปลี่ยนจาก lg:grid-cols-2 เป็น md:grid-cols-2 เพื่อให้บังคับซ้าย-ขวาในหน้าจอที่เล็กลง -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
             
             <!-- SECTION 1: SOLID BODY -->
@@ -164,9 +162,7 @@
     <template id="solid-template">
         <div class="solid-card card-anim bg-white p-4 rounded-xl shadow-sm border border-slate-200 relative group">
             <div class="flex gap-3 items-start">
-                <!-- Shape 3D Icon Box (Outline Only) -->
                 <div class="w-14 h-14 flex-shrink-0 flex items-center justify-center text-blue-600 bg-blue-50/50 rounded-lg border border-blue-100 p-2 icon-container">
-                    <!-- SVG Graphic will be injected here -->
                 </div>
                 
                 <!-- Inputs Grid -->
@@ -197,7 +193,7 @@
                         <input type="number" placeholder="mm" class="inp-l w-full h-9 px-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" oninput="calculateTotal()">
                     </div>
                     
-                    <!-- Dim 2 (Hidden by default) -->
+                    <!-- Dim 2 -->
                     <div class="div-dim-2 col-span-12 hidden mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100">
                         <div class="flex items-center gap-2">
                              <label class="text-[10px] font-bold text-slate-500 uppercase whitespace-nowrap">Thickness (mm):</label>
@@ -212,7 +208,6 @@
                 </button>
             </div>
             
-            <!-- Subweight -->
             <div class="text-right mt-2 pt-2 border-t border-slate-50 flex justify-end items-center gap-2">
                 <span class="text-[10px] text-slate-400 uppercase">Weight:</span>
                 <span class="span-weight text-sm font-bold text-slate-700">0.00</span>
@@ -225,9 +220,7 @@
     <template id="hole-template">
         <div class="hole-card card-anim bg-red-50/40 p-4 rounded-xl shadow-sm border border-red-100 relative group">
             <div class="flex gap-3 items-start">
-                <!-- 3D Icon Box (Outline Only) -->
                 <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center text-red-500 bg-white rounded-lg border border-red-200 p-2 icon-container">
-                    <!-- SVG Graphic will be injected here -->
                 </div>
                 
                 <!-- Inputs -->
@@ -290,7 +283,7 @@
                         <input type="number" placeholder="Depth" class="inp-l w-full h-9 px-2 bg-white border border-red-200 rounded-lg text-sm text-red-700 focus:ring-2 focus:ring-red-500 outline-none" oninput="calculateTotal()">
                     </div>
                     
-                    <!-- Dim 2 (Hidden by default) -->
+                    <!-- Dim 2 -->
                     <div class="div-dim-2 col-span-12 hidden mt-1 bg-red-50/50 p-2 rounded-lg border border-red-100">
                         <div class="flex items-center gap-2">
                              <label class="text-[10px] font-bold text-red-500 uppercase whitespace-nowrap">Minor (mm):</label>
@@ -304,7 +297,6 @@
                     <i class="fa-solid fa-trash-can"></i>
                 </button>
             </div>
-             <!-- Subweight -->
              <div class="text-right mt-2 pt-2 border-t border-red-100 flex justify-end items-center gap-2">
                 <span class="text-[10px] text-red-300 uppercase">Remove:</span>
                 <span class="text-sm font-bold text-red-500">-<span class="span-weight">0.00</span></span>
@@ -314,7 +306,7 @@
     </template>
 
     <script>
-        // --- 3D SVG SHAPE GRAPHICS (OUTLINE ONLY FOR BOTH) ---
+        // --- SVG SHAPE GRAPHICS ---
         const svgShapes = {
             round: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7 v10 a7 3 0 0 0 14 0 v-10"/></svg>`,
             square: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12,4 19,7.5 12,11 5,7.5"/><path d="M5 7.5 v9 l7 3.5 l7 -3.5 v-9"/><path d="M12 11 v9"/></svg>`,
@@ -332,10 +324,9 @@
         const holeTemplate = document.getElementById('hole-template');
 
         window.onload = () => {
-            addSolid(); // เริ่มต้นด้วย 1 ท่อนเนื้อตัน
+            addSolid();
         };
 
-        // --- SOLID LOGIC ---
         function addSolid() {
             const clone = solidTemplate.content.cloneNode(true);
             const card = clone.querySelector('.solid-card');
@@ -361,7 +352,6 @@
 
             div2.classList.add('hidden');
             
-            // แทรกรูปภาพวาด SVG ลายเส้นลงไป
             iconContainer.innerHTML = svgShapes[shape];
             iconContainer.querySelector('svg').classList.add('w-full', 'h-full', 'drop-shadow-sm', 'transition-all', 'duration-300');
 
@@ -390,7 +380,6 @@
             calculateTotal();
         }
 
-        // --- HOLE LOGIC ---
         function addHole() {
             const clone = holeTemplate.content.cloneNode(true);
             const card = clone.querySelector('.hole-card');
@@ -416,7 +405,6 @@
             if(div1) div1.classList.remove('hidden');
             if(divTap) divTap.classList.add('hidden');
             
-            // แทรกรูปภาพวาด SVG ลายเส้นรูกลวงลงไป
             iconContainer.innerHTML = svgShapes[shape];
             iconContainer.querySelector('svg').classList.add('w-full', 'h-full', 'drop-shadow-sm', 'transition-all', 'duration-300');
 
@@ -454,12 +442,10 @@
             calculateTotal();
         }
 
-        // --- CALCULATION ---
         function calculateTotal() {
             const density = parseFloat(document.getElementById('material').value);
             const qty = parseFloat(document.getElementById('qty').value) || 1;
 
-            // 1. Calc Solids
             let totalSolidKg = 0;
             solidContainer.querySelectorAll('.solid-card').forEach(card => {
                 const shape = card.querySelector('.inp-shape').value;
@@ -467,7 +453,6 @@
                 const d2 = parseFloat(card.querySelector('.inp-d2').value) || 0;
                 const l = parseFloat(card.querySelector('.inp-l').value) || 0;
                 
-                // cm conversion
                 const cm_d1 = d1/10; const cm_d2 = d2/10; const cm_l = l/10;
                 
                 let area = 0;
@@ -486,14 +471,13 @@
                 totalSolidKg += weight;
             });
 
-            // 2. Calc Holes
             let totalHoleKg = 0;
             holeContainer.querySelectorAll('.hole-card').forEach(card => {
                 const shape = card.querySelector('.inp-shape').value;
                 let d1 = 0;
                 
                 if (shape === 'tap') {
-                    d1 = parseFloat(card.querySelector('.inp-tap').value) || 0; // ดึงค่าขนาดรูเจาะนำต๊าป
+                    d1 = parseFloat(card.querySelector('.inp-tap').value) || 0;
                 } else {
                     d1 = parseFloat(card.querySelector('.inp-d1').value) || 0;
                 }
@@ -504,7 +488,7 @@
                 const cm_d1 = d1/10; const cm_d2 = d2/10; const cm_l = l/10;
                 
                 let area = 0;
-                if(shape === 'round' || shape === 'tap') area = Math.PI * Math.pow(cm_d1/2, 2); // คำนวณต๊าปเหมือนรูกลมปกติ
+                if(shape === 'round' || shape === 'tap') area = Math.PI * Math.pow(cm_d1/2, 2);
                 else if(shape === 'square') area = cm_d1 * cm_d1;
                 else if(shape === 'rect') area = cm_d1 * cm_d2;
                 else if(shape === 'hex') area = 0.866025 * cm_d1 * cm_d1; 
@@ -519,10 +503,8 @@
                 totalHoleKg += weight;
             });
 
-            // 3. Net Result (Per Piece)
             let netWeightPerPiece = totalSolidKg - totalHoleKg;
             
-            // Validation
             const errorMsg = document.getElementById('error-msg');
             if (netWeightPerPiece < 0) {
                 errorMsg.classList.remove('hidden');
@@ -531,12 +513,10 @@
                 errorMsg.classList.add('hidden');
             }
 
-            // Calculations
             const totalNetWeightKg = netWeightPerPiece * qty;
-            const totalNetWeightG = totalNetWeightKg * 1000; // Total G
+            const totalNetWeightG = totalNetWeightKg * 1000; 
             const pcsPerKg = netWeightPerPiece > 0 ? (1/netWeightPerPiece) : 0;
 
-            // UI Update
             document.getElementById('total-kg').innerText = totalNetWeightKg.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 6 });
             document.getElementById('total-g').innerText = totalNetWeightG.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
             
@@ -544,20 +524,14 @@
         }
 
         function resetCalculator() {
-            // 1. คืนค่าวัสดุเป็นค่าเริ่มต้น (เหล็ก)
             document.getElementById('material').value = "7.85";
-            
-            // 2. คืนค่าจำนวนชิ้นงาน
             document.getElementById('qty').value = "1";
             
-            // 3. ลบท่อนเนื้อตันและรูออกทั้งหมด
             document.getElementById('solid-container').innerHTML = '';
             document.getElementById('hole-container').innerHTML = '';
             
-            // 4. ซ่อนข้อความแจ้งเตือน
             document.getElementById('error-msg').classList.add('hidden');
             
-            // 5. สร้างท่อนเนื้อตันเริ่มต้น 1 ท่อน (จะทำการคำนวณใหม่เป็น 0 ให้อัตโนมัติ)
             addSolid();
         }
     </script>
